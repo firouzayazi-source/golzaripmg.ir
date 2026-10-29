@@ -64,7 +64,7 @@ async function relayGet(sitePath, { refresh = false, auth = false } = {}) {
 
   const release = await slot();
   try {
-    const url = `${RELAY}/relay?path=${encodeURIComponent(sitePath)}${mobile ? '&ua=mobile' : ''}`;
+    const url = `${RELAY}${RELAY.includes('?') ? '&' : '?'}path=${encodeURIComponent(sitePath)}${mobile ? '&ua=mobile' : ''}`;
     const headers = {};
     if (RELAY_KEY) headers['X-Relay-Key'] = RELAY_KEY;
     if (auth && WP_USER && WP_PASS) headers.Authorization = 'Basic ' + Buffer.from(`${WP_USER}:${WP_PASS}`).toString('base64');
