@@ -1,0 +1,136 @@
+name: انتشار
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          tools: none
+      - name: نحوِ پی‌اچ‌پی ۷٫۴
+        run: find wp-content scripts -name '*.php' -print0 | xargs -0 -n1 php -l
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: none
+      - name: وارسی‌های سریع
+        run: bash scripts/check.sh
+      # این گام هیچ‌وقت حذف نمی‌شود.
+      - name: بالا رفتنِ نسخه
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+          php scripts/verify-bump.php "$base"
+
+  visual:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sqlite3
+          tools: wp-cli
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: وردپرسِ کوچک با SQLite
+        run: bash tests/visual/setup-wp.sh "$RUNNER_TEMP/wp"
+      - name: راه‌اندازیِ سرور
+        run: |
+          php -S 127.0.0.1:8080 -t "$RUNNER_TEMP/wp" > "$RUNNER_TEMP/php.log" 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
+      - name: مرورگر
+        run: |
+          cd tests/visual
+          npm ci || npm install
+          npx playwright install --with-deps chromium
+      - name: سنجشِ گوشی و رایانه
+        run: node tests/visual/visual.mjs http://127.0.0.1:8080
+        env:
+          SHOTS_DIR: ${{ runner.temp }}/shots
+      - name: گزارشِ سرور
+        if: always()
+        run: |
+          cat "$RUNNER_TEMP/php.log" | tail -n 200
+          if grep -E "PHP (Fatal|Parse|Warning|Notice|Deprecated)" "$RUNNER_TEMP/php.log" | grep -i golzari; then
+            echo "✗ خطای پی‌اچ‌پی در افزونه‌های ما"; exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shots
+          path: ${{ runner.temp }}/shots
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [check, visual]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: ساختِ zipها و manifest
+        run: php scripts/build.php "$GITHUB_SHA" "https://github.com/${{ github.repository }}/releases/download/latest"
+      - name: انتشار با برچسبِ latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --cleanup-tag -y || true
+          git push origin :refs/tags/latest 2>/dev/null || true
+          gh release create latest dist/* \
+            --target "$GITHUB_SHA" \
+            --title "آخرین انتشار — ${GITHUB_SHA::7}" \
+            --notes "ساخته‌شده از ${GITHUB_SHA}" \
+            --latest
+
+  # انتشارِ سبز یعنی سایت همان کامیت را گزارش کرده. این وارسی حذف نمی‌شود.
+  live:
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: صبر تا سایت همان کامیت را گزارش کند
+        env:
+          RELAY: ${{ secrets.GOLZARI_RELAY_URL }}
+          RELAY_KEY: ${{ secrets.GOLZARI_RELAY_KEY }}
+        run: |
+          if [ -z "$RELAY" ]; then
+            echo "::notice::نشانیِ پل (GOLZARI_RELAY_URL) در رمزهای مخزن نیست؛ وارسیِ سایتِ زنده انجام نشد."
+            exit 0
+          fi
+          hdr=()
+          [ -n "$RELAY_KEY" ] && hdr=(-H "X-Relay-Key: $RELAY_KEY")
+          # آرام: هر ۶۰ ثانیه یک درخواست، حداکثر ۳۵ دقیقه.
+          for i in $(seq 1 35); do
+            body=$(curl -sS --max-time 30 "${hdr[@]}" "$RELAY/relay?path=/wp-json/golzari/v1/health%3Frefresh%3D1" || true)
+            commit=$(echo "$body" | jq -r '.commit // empty' 2>/dev/null || true)
+            echo "[$i] سایت: ${commit:0:7}  انتظار: ${GITHUB_SHA::7}"
+            if [ "$commit" = "$GITHUB_SHA" ]; then
+              echo "$body" | jq .
+              echo "✓ سایت همان کامیت را گزارش کرد."
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "$body"
+          echo "::error::سایت در ۳۵ دقیقه کامیتِ ${GITHUB_SHA::7} را گزارش نکرد."
+          exit 1
