@@ -43,6 +43,9 @@ const REGRESSIONS = [
       // عکسِ بالای صفحه باید عکسِ مجموعه باشد و بار شود.
       const hero = await page.$eval('img.hero-sample', (img) => ({ src: img.currentSrc || img.src, w: img.naturalWidth })).catch(() => null);
       if (!hero || !hero.src.includes('golzari-brand/assets/hero-') || !hero.w) return 'عکسِ بالای صفحه عکسِ مجموعه نیست یا بار نشد';
+      // ۱۴۰۵/۰۸/۰۸: لوگوی زیبانو در منوی گوشی مانده بود.
+      const logo = await page.$eval('img.logo-sample', (img) => img.src).catch(() => '');
+      if (!logo.includes('golzari-brand/assets/logo.webp')) return 'لوگوی قالب به لوگوی مجموعه عوض نشد';
       // رنگِ اصلیِ صفحه‌ساز سبزِ نوارِ بالاست، نه بنفشِ قالب.
       const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--e-global-color-primary').trim().toLowerCase());
       if (primary !== '#4f7e6e') return `رنگِ اصلی سبز نیست (${primary || 'خالی'})`;

@@ -66,7 +66,7 @@ class Golzari_Brand {
 		if ( ! is_string( $html ) || '' === $html || false === stripos( $html, '<html' ) ) {
 			return $html;
 		}
-		$html  = Golzari_Brand_Media::html( $html );
+		$html  = Golzari_Brand_Media::menu( Golzari_Brand_Media::html( $html ) );
 		$parts = preg_split( '#(<script\b.*?</script>|<style\b.*?</style>|<textarea\b.*?</textarea>|<!--.*?-->|<[^>]+>)#is', $html, -1, PREG_SPLIT_DELIM_CAPTURE );
 		if ( false === $parts ) {
 			return $html;
@@ -121,6 +121,7 @@ class Golzari_Brand {
 			$tag
 		);
 
+		$tag = Golzari_Brand_Media::logo( $tag );
 		if ( preg_match( '#^<img\s#i', $tag ) ) {
 			return self::img( $tag );
 		}

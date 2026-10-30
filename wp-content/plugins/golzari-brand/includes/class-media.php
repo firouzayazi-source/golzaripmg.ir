@@ -52,7 +52,46 @@ class Golzari_Brand_Media {
 		);
 	}
 
+	/** لوگوهای قالب (زیبانو، رنگی و سفید) که همه‌جا لوگوی طلاییِ مجموعه می‌شوند. */
+	const LOGOS = array( '/2022/11/cropped-logo', '/logo-white-66b671bd0d47a' );
+
 	private static $seen = array();
+
+	/** لوگو و نمادِ برگه‌ی مرورگر؛ در همه‌ی صفحه‌ها. */
+	public static function logo( $tag ) {
+		if ( preg_match( '#^<img\s#i', $tag ) ) {
+			foreach ( self::LOGOS as $needle ) {
+				if ( false !== strpos( $tag, $needle ) ) {
+					$tag = preg_replace( '#\ssrc=(["\'])[^"\']*\1#i', ' src="' . esc_url( self::url( 'logo' ) ) . '"', $tag, 1 );
+					$tag = preg_replace( '#\s(srcset|sizes)=(["\'])[^"\']*\2#i', '', $tag );
+					$tag = preg_replace( '#\swidth=(["\'])[^"\']*\1#i', ' width="512"', $tag, 1 );
+					return preg_replace( '#\sheight=(["\'])[^"\']*\1#i', ' height="512"', $tag, 1 );
+				}
+			}
+			return $tag;
+		}
+		if ( preg_match( '#^<link\s[^>]*rel=["\'](?:icon|apple-touch-icon)["\']#i', $tag ) && preg_match( '#/cropped-PM-(\d+)x\d+\.png#', $tag, $m ) ) {
+			$n = (int) $m[1] <= 32 ? 32 : ( (int) $m[1] <= 180 ? 180 : 192 );
+			return preg_replace( '#\shref=(["\'])[^"\']*\1#i', ' href="' . esc_url( plugins_url( 'assets/icon-' . $n . '.png', GOLZARI_BRAND_DIR . 'golzari-brand.php' ) . '?ver=' . GOLZARI_BRAND_VER ) . '"', $tag, 1 );
+		}
+		return $tag;
+	}
+
+	/** منو: دو گزینه‌ی نمونه‌ی قالب به «خانه» و «خدمات»؛ زیرمنوی نمونه‌هایشان پنهان می‌شود (css). */
+	public static function menu( $html ) {
+		$map = array(
+			'دموهای صفحه اصلی' => array( golzari_label( 'menu_home' ), home_url( '/' ) ),
+			'سایر دموها'       => array( golzari_label( 'menu_services' ), home_url( '/' . rawurlencode( 'خدمات' ) . '/' ) ),
+		);
+		foreach ( $map as $old => $new ) {
+			$html = preg_replace(
+				'#<a href="\#"( class="ct-menu-link")>\s*' . preg_quote( $old, '#' ) . '\s*</a>#u',
+				'<a href="' . esc_url( $new[1] ) . '"$1>' . esc_html( $new[0] ) . '</a>',
+				$html
+			);
+		}
+		return $html;
+	}
 
 	public static function init() {
 		add_action( 'wp_head', array( __CLASS__, 'css' ), 100 );
@@ -142,6 +181,11 @@ class Golzari_Brand_Media {
 		}
 		$g   = self::GREEN;
 		$css = ":root,.elementor-kit-5{--e-global-color-primary:{$g};--e-global-color-secondary:" . self::GREEN_DARK . ";--theme-palette-color-1:{$g};--theme-palette-color-2:" . self::GREEN_DARK . ';}';
+		// منوی کناریِ گوشی: متنِ تیره روی زمینه‌ی سفید.
+		$css .= "#offcanvas [data-id=\"mobile-menu\"]{--theme-link-initial-color:#2f3e3a;--theme-link-hover-color:{$g};--theme-link-active-color:{$g}}";
+		$css .= '#offcanvas .ct-search-form input{color:#2f3e3a}#offcanvas .ct-search-form input::placeholder{color:#6b7a76}';
+		// زیرمنوی نمونه‌های قالب زیرِ «خانه» و «خدمات».
+		$css .= '#menu-item-154>.sub-menu,#menu-item-155>.sub-menu,#menu-item-154 .ct-toggle-dropdown-mobile,#menu-item-155 .ct-toggle-dropdown-mobile,#menu-item-154 .ct-toggle-dropdown-desktop,#menu-item-155 .ct-toggle-dropdown-desktop{display:none!important}';
 		if ( is_front_page() ) {
 			foreach ( self::HIDE as $id ) {
 				$css .= ".elementor-element-{$id}{display:none!important}";
