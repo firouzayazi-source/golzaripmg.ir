@@ -13,6 +13,9 @@ on:
         type: choice
         options: [mobile, desktop]
         default: mobile
+      click:
+        description: گزینشگری که پیش از عکس رویش زده شود (اختیاری)
+        default: ''
 
 # هیچ‌وقت دو اجرای هم‌زمان.
 concurrency:
@@ -41,17 +44,23 @@ jobs:
           GOLZARI_RELAY_KEY: ${{ secrets.GOLZARI_RELAY_KEY }}
           SNAP_PATH: ${{ inputs.path }}
           SNAP_DEVICE: ${{ inputs.device }}
+          SNAP_CLICK: ${{ inputs.click }}
         run: |
           flag=""
           [ "$SNAP_DEVICE" = "desktop" ] && flag="--desktop"
-          node tools/snap.mjs "$SNAP_PATH" $flag --out shots/snap.png
+          if [ -n "$SNAP_CLICK" ]; then
+            node tools/snap.mjs "$SNAP_PATH" $flag --click "$SNAP_CLICK" --out shots/snap.png
+          else
+            node tools/snap.mjs "$SNAP_PATH" $flag --out shots/snap.png
+          fi
       # عکس روی شاخه‌ی جدای shots؛ به main و انتشار کاری ندارد.
       - name: فرستادن به شاخه‌ی shots
         env:
           SNAP_PATH: ${{ inputs.path }}
           SNAP_DEVICE: ${{ inputs.device }}
+          SNAP_CLICK: ${{ inputs.click }}
         run: |
-          name="$(echo "$SNAP_PATH" | sed 's/[^A-Za-z0-9-]\+/_/g; s/^_*$/home/')-${SNAP_DEVICE}.png"
+          name="$(echo "$SNAP_PATH" | sed 's/[^A-Za-z0-9-]\+/_/g; s/^_*$/home/')-${SNAP_DEVICE}${SNAP_CLICK:+-click}.png"
           dir="$RUNNER_TEMP/shots"
           git clone --quiet --depth 1 --branch shots "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$dir" 2>/dev/null \
             || { mkdir -p "$dir" && git -C "$dir" init -q -b shots && git -C "$dir" remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"; }

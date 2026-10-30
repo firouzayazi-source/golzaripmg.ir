@@ -22,9 +22,11 @@ const WP_PASS = process.env.GOLZARI_WP_APP_PASSWORD || '';
 
 const args = process.argv.slice(2);
 const flag = (f) => args.includes(f);
-const path = args.find((a) => !a.startsWith('--')) || '/';
+const path = args.find((a, i) => !a.startsWith('--') && !['--out', '--click'].includes(args[i - 1])) || '/';
 const mobile = !flag('--desktop');
 const out = (() => { const i = args.indexOf('--out'); return i >= 0 ? args[i + 1] : null; })();
+// --click <گزینشگر>: پیش از عکس روی آن بزن (مثلاً دکمه‌ی منو) و فقط همان نما را بگیر.
+const click = (() => { const i = args.indexOf('--click'); return i >= 0 ? args[i + 1] : null; })();
 
 // بی GOLZARI_RELAY_URL مستقیم از سایت می‌خواند؛ پل فقط اگر هاست آی‌پیِ خارج را بست.
 const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
@@ -133,7 +135,11 @@ await page.waitForTimeout(1500);
 const overflow = await page.evaluate(() => document.scrollingElement.scrollWidth - document.scrollingElement.clientWidth);
 const file = out || join(ROOT, 'shots', `${(path.replace(/[^\w-]+/g, '_') || 'home')}-${mobile ? 'mobile' : 'desktop'}.png`);
 mkdirSync(dirname(file), { recursive: true });
-await page.screenshot({ path: file, fullPage: true });
+if (click) {
+  await page.click(click, { timeout: 10000 });
+  await page.waitForTimeout(1500);
+}
+await page.screenshot({ path: file, fullPage: !click });
 if (docHtml) writeFileSync(file.replace(/\.png$/, '') + '.html', docHtml);
 await browser.close();
 
