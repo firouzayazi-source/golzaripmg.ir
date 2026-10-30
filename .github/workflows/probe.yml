@@ -1,0 +1,17 @@
+name: سنجشِ دسترسی از خارج
+
+# فقط دستی. فقط یک درخواست؛ هیچ‌وقت در حلقه.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: یک درخواست به نشانیِ سلامت
+        run: |
+          code=$(curl -sS -o body.txt -w '%{http_code}' --max-time 20 https://golzaripmg.ir/wp-json/golzari/v1/health || echo "000")
+          echo "وضعیت: $code"
+          head -c 600 body.txt 2>/dev/null || true
+          echo
+          if [ "$code" = "200" ]; then echo "✓ هاست از خارج جواب داد."; else echo "✗ هاست از خارج جواب نداد."; fi
