@@ -1,0 +1,52 @@
+name: خواندنِ چند فایل از سایتِ زنده
+
+# فقط دستی. هر بار حداکثر ۵ مسیر، یکی‌یکی با ۳ ثانیه فاصله؛ بعد از ۳ قطعِ پشتِ سرِ هم می‌ایستد.
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: مسیرها، با فاصله جدا (حداکثر ۵)
+        required: true
+
+concurrency:
+  group: snap
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: خواندن
+        env:
+          PATHS: ${{ inputs.paths }}
+        run: |
+          mkdir -p out
+          n=0; fails=0
+          for p in $PATHS; do
+            n=$((n+1)); [ $n -gt 5 ] && break
+            case "$p" in /*) ;; *) echo "مسیر باید با / شروع شود: $p"; continue ;; esac
+            name="fetched/$(echo "${p%%\?*}" | sed 's#^/##; s#[^A-Za-z0-9._-]\+#_#g')"
+            code=$(curl -sS -o "out/body" -w '%{http_code}' --max-time 30 "https://golzaripmg.ir$p" || echo 000)
+            echo "$code $p"
+            if [ "$code" = "200" ]; then
+              mkdir -p "out/$(dirname "$name")"; mv out/body "out/$name"; fails=0
+            else
+              fails=$((fails+1)); [ $fails -ge 3 ] && { echo "۳ قطعِ پشتِ سرِ هم؛ توقف."; break; }
+            fi
+            sleep 3
+          done
+      - name: فرستادن به شاخه‌ی shots
+        run: |
+          dir="$RUNNER_TEMP/shots"
+          git clone --quiet --depth 1 --branch shots "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$dir"
+          cp -r out/fetched "$dir/" 2>/dev/null || true
+          cd "$dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "خوانده‌شده از سایت" || true
+          git push -q origin shots
