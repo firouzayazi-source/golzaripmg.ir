@@ -102,6 +102,7 @@ const context = await browser.newContext(
 const page = await context.newPage();
 let fromRelay = 0;
 let fromCache = 0;
+let docHtml = null;
 
 await page.route('**/*', async (route) => {
   const u = new URL(route.request().url());
@@ -110,6 +111,7 @@ await page.route('**/*', async (route) => {
   try {
     const r = await relayGet(u.pathname + u.search, { refresh: isDoc && flag('--refresh') });
     r.cached ? fromCache++ : fromRelay++;
+    if (isDoc && docHtml === null) docHtml = r.body;
     await route.fulfill({ status: r.status, contentType: r.type, body: r.body });
   } catch (e) {
     console.error(`• ${u.pathname}: ${e.message}`);
@@ -119,10 +121,20 @@ await page.route('**/*', async (route) => {
 
 await page.goto(SITE + path, { waitUntil: 'load', timeout: 120000 });
 await page.waitForTimeout(1500);
+// آرام پایین می‌رویم تا بخش‌هایی که با اسکرول ظاهر می‌شوند در عکس بیایند؛ درخواست‌ها همچنان از همان صفِ ۲تایی می‌گذرند.
+const vh = await page.evaluate(() => window.innerHeight);
+for (let y = 0, h = 1; y < h; y += Math.round(vh * 0.8)) {
+  await page.evaluate((top) => window.scrollTo(0, top), y);
+  await page.waitForTimeout(400);
+  h = await page.evaluate(() => document.scrollingElement.scrollHeight);
+}
+await page.evaluate(() => window.scrollTo(0, 0));
+await page.waitForTimeout(1500);
 const overflow = await page.evaluate(() => document.scrollingElement.scrollWidth - document.scrollingElement.clientWidth);
 const file = out || join(ROOT, 'shots', `${(path.replace(/[^\w-]+/g, '_') || 'home')}-${mobile ? 'mobile' : 'desktop'}.png`);
 mkdirSync(dirname(file), { recursive: true });
 await page.screenshot({ path: file, fullPage: true });
+if (docHtml) writeFileSync(file.replace(/\.png$/, '') + '.html', docHtml);
 await browser.close();
 
 console.log(`✓ ${file}`);
