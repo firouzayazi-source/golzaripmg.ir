@@ -32,6 +32,8 @@ const REGRESSIONS = [
     check: async (page) => {
       const text = await page.locator('body').innerText();
       if (/زیبانو|راست چین/.test(text)) return 'نامِ قالب هنوز در متنِ صفحه است';
+      if (/لورم ایپسوم|آرامش و اسپا/.test(text)) return 'متنِ نمونه‌ی قالب هنوز در صفحه است';
+      if (!text.includes('اطلاعات مجموعه گلزاری')) return 'عنوانِ اطلاعاتِ مجموعه نیامد';
       if (!text.includes('golzari pmg')) return 'نامِ مجموعه در پایینِ صفحه نیامد';
       const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
       if (hrefs.some((h) => /smdesign\.ir/.test(h))) return 'لینک به سایتِ نمونه‌ی قالب مانده';

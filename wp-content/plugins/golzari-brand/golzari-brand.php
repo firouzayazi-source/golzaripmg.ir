@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: گلزاری — شخصی‌سازی
- * Description: نام‌ها، اینستاگرام، شماره‌ی تماس و عکسِ بالای صفحه‌ی قالب را با مشخصاتِ مجموعه‌ی گلزاری عوض می‌کند؛ فقط در خروجیِ صفحه، بی دست زدن به قالب یا پایگاهِ داده.
- * Version: 1.2.0
+ * Description: نام‌ها، متن‌های نمونه، اینستاگرام، شماره‌ی تماس و عکسِ بالای صفحه‌ی قالب را با مشخصاتِ مجموعه‌ی گلزاری عوض می‌کند؛ فقط در خروجیِ صفحه، بی دست زدن به قالب یا پایگاهِ داده.
+ * Version: 1.3.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: گلزاری
@@ -13,9 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLZARI_BRAND_VER', '1.2.0' );
+define( 'GOLZARI_BRAND_VER', '1.3.0' );
 define( 'GOLZARI_BRAND_DIR', plugin_dir_path( __FILE__ ) );
 
+require_once GOLZARI_BRAND_DIR . 'includes/class-content.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-brand.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-settings.php';
 

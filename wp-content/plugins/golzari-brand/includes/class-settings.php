@@ -17,6 +17,10 @@ class Golzari_Brand_Settings {
 	}
 
 	public static function fields() {
+		return array_merge( self::base_fields(), Golzari_Brand_Content::titles() );
+	}
+
+	private static function base_fields() {
 		return array(
 			'name_fa'    => 'نامِ فارسی (به جای «زیبانو»)',
 			'name_en'    => 'نامِ لاتین',

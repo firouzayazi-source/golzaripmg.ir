@@ -24,6 +24,10 @@ class Golzari_Brand {
 	}
 
 	public static function defaults() {
+		return array_merge( self::base_defaults(), Golzari_Brand_Content::defaults() );
+	}
+
+	private static function base_defaults() {
 		return array(
 			'name_fa'    => 'گلزاری',
 			'name_en'    => 'golzari',
@@ -53,6 +57,7 @@ class Golzari_Brand {
 		if ( is_admin() || wp_doing_ajax() || is_feed() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
 			return;
 		}
+		Golzari_Brand_Content::$front = is_front_page();
 		ob_start( array( __CLASS__, 'filter' ) );
 	}
 
@@ -65,12 +70,13 @@ class Golzari_Brand {
 		if ( false === $parts ) {
 			return $html;
 		}
+		Golzari_Brand_Content::reset();
 		foreach ( $parts as $i => $part ) {
 			if ( '' === $part ) {
 				continue;
 			}
 			if ( '<' !== $part[0] ) {
-				$parts[ $i ] = self::text( $part );
+				$parts[ $i ] = self::text( Golzari_Brand_Content::text( $part ) );
 			} elseif ( preg_match( '#^<(script|style|textarea|!--)#i', $part ) ) {
 				continue;
 			} else {
