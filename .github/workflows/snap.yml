@@ -19,6 +19,9 @@ concurrency:
   group: snap
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   snap:
     runs-on: ubuntu-latest
@@ -42,7 +45,21 @@ jobs:
           flag=""
           [ "$SNAP_DEVICE" = "desktop" ] && flag="--desktop"
           node tools/snap.mjs "$SNAP_PATH" $flag --out shots/snap.png
-      - uses: actions/upload-artifact@v4
-        with:
-          name: snap
-          path: shots/snap.png
+      # عکس روی شاخه‌ی جدای shots؛ به main و انتشار کاری ندارد.
+      - name: فرستادن به شاخه‌ی shots
+        env:
+          SNAP_PATH: ${{ inputs.path }}
+          SNAP_DEVICE: ${{ inputs.device }}
+        run: |
+          name="$(echo "$SNAP_PATH" | sed 's/[^A-Za-z0-9-]\+/_/g; s/^_*$/home/')-${SNAP_DEVICE}.png"
+          dir="$RUNNER_TEMP/shots"
+          git clone --quiet --depth 1 --branch shots "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$dir" 2>/dev/null \
+            || { mkdir -p "$dir" && git -C "$dir" init -q -b shots && git -C "$dir" remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"; }
+          cp shots/snap.png "$dir/$name"
+          cd "$dir"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "عکس ${name}" || true
+          git push -q origin shots
+          echo "✓ $name"
