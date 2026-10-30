@@ -128,7 +128,9 @@ class Golzari_Brand_Media {
 				. '<div class="elementor-gallery-item__overlay"></div><div class="elementor-gallery-item__content"></div></a>';
 		}
 
-		$out = preg_replace( '#<div class="elementor-gallery__titles-container[^"]*"[^>]*>.*?</div>#s', $bar, $html, 1 );
+		// بارگذاریِ تأخیری خاموش تا عکس‌ها بی اسکرول بیایند.
+		$out = preg_replace( '#(data-id="be17f13"[^>]*?)&quot;lazyload&quot;:&quot;yes&quot;#', '$1&quot;lazyload&quot;:&quot;no&quot;', $html, 1 );
+		$out = preg_replace( '#<div class="elementor-gallery__titles-container[^"]*"[^>]*>.*?</div>#s', $bar, (string) $out, 1 );
 		$out = preg_replace( '#<a class="e-gallery-item[^"]*"[^>]*>.*?</a>#s', '', (string) $out );
 		$out = preg_replace( '#(<div class="elementor-gallery__container">)#', '$1' . str_replace( '$', '\\$', $items ), (string) $out, 1 );
 		return is_string( $out ) && '' !== $out ? $out : $html;
@@ -151,7 +153,8 @@ class Golzari_Brand_Media {
 			// پس‌زمینه‌ی ستاره‌ای به سبزِ ملایم.
 			$css .= '.elementor-element-ed0c954:not(.elementor-motion-effects-element-type-background){background-image:linear-gradient(180deg,' . self::GREEN_SOFT . ',#f7faf9)!important}';
 			// عکسِ خدمات گرد.
-			$css .= '.elementor-element-aa8dada img,.elementor-element-f4d6715 img,.elementor-element-5c4e16c img{width:120px;height:120px;object-fit:cover;border-radius:50%}';
+			$css .= '.elementor-element-aa8dada .elementor-image-box-img,.elementor-element-f4d6715 .elementor-image-box-img,.elementor-element-5c4e16c .elementor-image-box-img{width:120px!important;max-width:none!important;flex:0 0 120px}';
+			$css .= '.elementor-element-aa8dada img,.elementor-element-f4d6715 img,.elementor-element-5c4e16c img{width:120px!important;height:120px!important;max-width:none!important;aspect-ratio:1/1;object-fit:cover;border-radius:50%}';
 		}
 		echo '<style id="golzari-brand-css">' . $css . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput
 	}
