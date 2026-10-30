@@ -24,6 +24,7 @@ class Golzari_Brand_Settings {
 			'instagram'  => 'نامِ کاربریِ اینستاگرام',
 			'phone'      => 'شماره‌ی تماس',
 			'footer'     => 'متنِ پایینِ صفحه (به جای «قالب وردپرس توسط راست چین»)',
+			'hero'       => 'عکسِ بالای صفحه‌ی اصلی',
 		);
 	}
 
@@ -47,7 +48,9 @@ class Golzari_Brand_Settings {
 		$out = array();
 		foreach ( array_keys( self::fields() ) as $key ) {
 			$v = isset( $in[ $key ] ) ? sanitize_text_field( wp_unslash( $in[ $key ] ) ) : '';
-			if ( 'instagram' === $key ) {
+			if ( 'hero' === $key ) {
+				$v = '1' === $v ? '1' : '0';
+			} elseif ( 'instagram' === $key ) {
 				$v = preg_replace( '/[^A-Za-z0-9._]/', '', ltrim( $v, '@' ) );
 			} elseif ( 'phone' === $key ) {
 				$v = preg_replace( '/[^0-9+]/', '', strtr( $v, array( '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4', '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9' ) ) );
@@ -68,6 +71,16 @@ class Golzari_Brand_Settings {
 		settings_fields( self::PAGE );
 		echo '<table class="form-table" role="presentation">';
 		foreach ( self::fields() as $key => $title ) {
+			if ( 'hero' === $key ) {
+				printf(
+					'<tr><th scope="row">%1$s</th><td><input type="hidden" name="%2$s[hero]" value="0"><label><input type="checkbox" name="%2$s[hero]" value="1"%3$s> %4$s</label></td></tr>',
+					esc_html( $title ),
+					esc_attr( Golzari_Brand::OPTION ),
+					checked( Golzari_Brand::label( 'hero' ), '1', false ),
+					'عکسِ مجموعه به جای عکسِ پیش‌فرضِ قالب'
+				);
+				continue;
+			}
 			printf(
 				'<tr><th scope="row"><label for="golzari-%1$s">%2$s</label></th><td><input type="text" class="regular-text" id="golzari-%1$s" name="%3$s[%1$s]" value="%4$s" placeholder="%5$s" dir="auto"></td></tr>',
 				esc_attr( $key ),

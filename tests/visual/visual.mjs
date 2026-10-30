@@ -38,6 +38,9 @@ const REGRESSIONS = [
       const insta = hrefs.filter((h) => /instagram\.com/.test(h));
       if (!insta.length || insta.some((h) => !h.includes('golzari_pmg'))) return 'لینکِ اینستاگرام به golzari_pmg نیست';
       if (!hrefs.includes('tel:09129178237')) return 'لینکِ تماس به شماره‌ی مجموعه نیست';
+      // عکسِ بالای صفحه باید عکسِ مجموعه باشد و بار شود.
+      const hero = await page.$eval('img.hero-sample', (img) => ({ src: img.currentSrc || img.src, w: img.naturalWidth })).catch(() => null);
+      if (!hero || !hero.src.includes('golzari-brand/assets/hero-') || !hero.w) return 'عکسِ بالای صفحه عکسِ مجموعه نیست یا بار نشد';
       return null;
     },
   },

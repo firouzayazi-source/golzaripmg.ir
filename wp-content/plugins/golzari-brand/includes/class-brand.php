@@ -12,6 +12,9 @@ class Golzari_Brand {
 
 	const OPTION = 'golzari_labels';
 
+	/** عکسِ بالای صفحه‌ی اصلیِ قالب (نامِ فایل در کتابخانه‌ی رسانه). */
+	const HERO_IMG = 'asset-6-66b671ba6b039';
+
 	/** ویژگی‌هایی که متنِ نمایشی دارند. */
 	const TEXT_ATTRS = array( 'alt', 'title', 'placeholder', 'aria-label', 'data-title' );
 
@@ -28,6 +31,7 @@ class Golzari_Brand {
 			'instagram'  => 'golzari_pmg',
 			'phone'      => '09129178237',
 			'footer'     => 'مجموعه golzari pmg',
+			'hero'       => '1',
 		);
 	}
 
@@ -109,6 +113,9 @@ class Golzari_Brand {
 			$tag
 		);
 
+		if ( preg_match( '#^<img\s#i', $tag ) ) {
+			return self::img( $tag );
+		}
 		if ( ! preg_match( '#^<a\s#i', $tag ) ) {
 			return $tag;
 		}
@@ -132,6 +139,21 @@ class Golzari_Brand {
 		// لینکِ تماس.
 		$tag = preg_replace( '#href=(["\'])tel:[^"\']*\1#i', 'href="tel:' . esc_attr( self::label( 'phone' ) ) . '"', $tag );
 
+		return $tag;
+	}
+
+	/** عکسِ بالای صفحه به عکسِ خودِ مجموعه، با زمینه‌ی شفاف. */
+	public static function img( $tag ) {
+		if ( '1' !== self::label( 'hero' ) || false === strpos( $tag, self::HERO_IMG ) ) {
+			return $tag;
+		}
+		$base   = plugins_url( 'assets/', GOLZARI_BRAND_DIR . 'golzari-brand.php' );
+		$ver    = '?ver=' . GOLZARI_BRAND_VER;
+		$src    = esc_url( $base . 'hero-1024.webp' . $ver );
+		$srcset = esc_attr( $base . 'hero-600.webp' . $ver . ' 600w, ' . $base . 'hero-1024.webp' . $ver . ' 1024w' );
+		$tag    = preg_replace( '#\ssrc=(["\'])[^"\']*\1#i', ' src="' . $src . '"', $tag, 1 );
+		$tag    = preg_replace( '#\ssrcset=(["\'])[^"\']*\1#i', ' srcset="' . $srcset . '"', $tag, 1 );
+		$tag    = preg_replace( '#\salt=(["\'])[^"\']*\1#i', ' alt="' . esc_attr( self::label( 'name_fa' ) ) . '"', $tag, 1 );
 		return $tag;
 	}
 
