@@ -17,6 +17,7 @@ class Golzari_Updater {
 	const FAIL_T        = 'golzari_manifest_fail';
 	const LOCK_T        = 'golzari_upd_lock';
 	const POKE_T        = 'golzari_upd_poke';
+	const SEEN          = 'golzari_upd_seen';
 
 	public static function init() {
 		add_filter( 'cron_schedules', array( __CLASS__, 'schedules' ) );
@@ -133,6 +134,41 @@ class Golzari_Updater {
 		return $out;
 	}
 
+	/**
+	 * افزونه‌هایی از manifest که هیچ‌وقت روی سایت نصب نشده‌اند.
+	 * هر نامک فقط یک بار نصب می‌شود؛ اگر کاربر بعداً پاکش کرد، دوباره نصب نمی‌شود.
+	 *
+	 * @return array slug => info
+	 */
+	public static function missing( $manifest ) {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$installed = get_plugins();
+		$seen      = (array) get_option( self::SEEN, array() );
+		$out       = array();
+		foreach ( $manifest['plugins'] as $slug => $info ) {
+			$file = $slug . '/' . $slug . '.php';
+			if ( isset( $installed[ $file ] ) ) {
+				continue;
+			}
+			if ( in_array( $slug, $seen, true ) || empty( $info['package'] ) ) {
+				continue;
+			}
+			$out[ $slug ] = $info;
+		}
+		return $out;
+	}
+
+	/** نامک‌هایی که روی سایت نصب‌اند در فهرستِ «دیده‌شده» می‌روند. */
+	private static function mark_seen( $slugs ) {
+		$seen = (array) get_option( self::SEEN, array() );
+		$all  = array_values( array_unique( array_merge( $seen, $slugs ) ) );
+		if ( $all !== $seen ) {
+			update_option( self::SEEN, $all, false );
+		}
+	}
+
 	public static function pending( $manifest = null ) {
 		$out = array();
 		foreach ( self::ours( $manifest ) as $file => $p ) {
@@ -222,20 +258,49 @@ class Golzari_Updater {
 		}
 		set_transient( self::LOCK_T, 1, 10 * MINUTE_IN_SECONDS );
 
-		$result = array( 'upgraded' => array(), 'failed' => array() );
+		$result = array( 'upgraded' => array(), 'installed' => array(), 'failed' => array() );
 		try {
 			$manifest = self::manifest( true );
 			if ( ! $manifest ) {
 				return $result;
 			}
+			self::mark_seen( wp_list_pluck( self::ours( $manifest ), 'slug' ) );
 			$pending = self::pending( $manifest );
+			$missing = self::missing( $manifest );
 			$purge   = false;
 
-			if ( $pending ) {
+			if ( $pending || $missing ) {
 				require_once ABSPATH . 'wp-admin/includes/file.php';
 				require_once ABSPATH . 'wp-admin/includes/misc.php';
 				require_once ABSPATH . 'wp-admin/includes/plugin.php';
 				require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
+			}
+
+			// افزونه‌ی تازه: یک بار نصب و فعال.
+			foreach ( $missing as $slug => $info ) {
+				$file     = $slug . '/' . $slug . '.php';
+				$upgrader = new Plugin_Upgrader( new Automatic_Upgrader_Skin() );
+				$ok       = $upgrader->install( $info['package'] );
+				wp_clean_plugins_cache( false );
+
+				if ( true === $ok && file_exists( WP_PLUGIN_DIR . '/' . $file ) ) {
+					self::mark_seen( array( $slug ) );
+					$act = activate_plugin( $file, '', false, true );
+					if ( is_wp_error( $act ) ) {
+						$result['failed'][ $slug ] = $act->get_error_message();
+						continue;
+					}
+					$result['installed'][ $slug ] = $info['version'];
+					if ( ! isset( $info['purge'] ) || $info['purge'] ) {
+						$purge = true;
+					}
+				} else {
+					$err = is_wp_error( $ok ) ? $ok : $upgrader->skin->result;
+					$result['failed'][ $slug ] = is_wp_error( $err ) ? $err->get_error_message() : 'نامعلوم';
+				}
+			}
+
+			if ( $pending ) {
 
 				foreach ( $pending as $file => $p ) {
 					$was_active = is_plugin_active( $file );
@@ -267,7 +332,7 @@ class Golzari_Updater {
 				'last_check'  => time(),
 				'last_result' => $result,
 			);
-			if ( ! $left ) {
+			if ( ! $left && ! $result['failed'] ) {
 				$state['deployed_commit'] = isset( $manifest['commit'] ) ? (string) $manifest['commit'] : '';
 				$state['last_error']      = '';
 			} elseif ( $result['failed'] ) {
