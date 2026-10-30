@@ -1,0 +1,48 @@
+name: عکس از سایتِ زنده
+
+# فقط دستی؛ هیچ‌وقت زمان‌بندی یا حلقه.
+# tools/snap.mjs حداکثر ۲ درخواستِ هم‌زمان با فاصله می‌زند و بعد از ۳ قطع می‌ایستد.
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: مسیرِ صفحه
+        default: /
+      device:
+        description: دستگاه
+        type: choice
+        options: [mobile, desktop]
+        default: mobile
+
+# هیچ‌وقت دو اجرای هم‌زمان.
+concurrency:
+  group: snap
+  cancel-in-progress: false
+
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: مرورگر
+        run: |
+          npm install --no-save --no-package-lock playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: عکس
+        env:
+          GOLZARI_RELAY_URL: ${{ secrets.GOLZARI_RELAY_URL }}
+          GOLZARI_RELAY_KEY: ${{ secrets.GOLZARI_RELAY_KEY }}
+          SNAP_PATH: ${{ inputs.path }}
+          SNAP_DEVICE: ${{ inputs.device }}
+        run: |
+          flag=""
+          [ "$SNAP_DEVICE" = "desktop" ] && flag="--desktop"
+          node tools/snap.mjs "$SNAP_PATH" $flag --out shots/snap.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snap
+          path: shots/snap.png
