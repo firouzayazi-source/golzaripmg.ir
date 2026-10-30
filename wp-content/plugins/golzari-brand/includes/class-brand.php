@@ -12,8 +12,8 @@ class Golzari_Brand {
 
 	const OPTION = 'golzari_labels';
 
-	/** عکسِ بالای صفحه‌ی اصلیِ قالب (نامِ فایل در کتابخانه‌ی رسانه). */
-	const HERO_IMG = 'asset-6-66b671ba6b039';
+	/** عکسِ بزرگِ بالای صفحه‌ی اصلیِ قالب (کلاسِ پیوستِ آن در کتابخانه‌ی رسانه، فایلِ 2023/08/003.webp). */
+	const HERO_IMG = 'wp-image-2094';
 
 	/** ویژگی‌هایی که متنِ نمایشی دارند. */
 	const TEXT_ATTRS = array( 'alt', 'title', 'placeholder', 'aria-label', 'data-title' );
@@ -144,13 +144,13 @@ class Golzari_Brand {
 
 	/** عکسِ بالای صفحه به عکسِ خودِ مجموعه، با زمینه‌ی شفاف. */
 	public static function img( $tag ) {
-		if ( '1' !== self::label( 'hero' ) || false === strpos( $tag, self::HERO_IMG ) ) {
+		if ( '1' !== self::label( 'hero' ) || ! preg_match( '#\b' . self::HERO_IMG . '\b#', $tag ) ) {
 			return $tag;
 		}
 		$base   = plugins_url( 'assets/', GOLZARI_BRAND_DIR . 'golzari-brand.php' );
 		$ver    = '?ver=' . GOLZARI_BRAND_VER;
-		$src    = esc_url( $base . 'hero-1024.webp' . $ver );
-		$srcset = esc_attr( $base . 'hero-600.webp' . $ver . ' 600w, ' . $base . 'hero-1024.webp' . $ver . ' 1024w' );
+		$src    = esc_url( $base . 'hero-1200.webp' . $ver );
+		$srcset = esc_attr( $base . 'hero-600.webp' . $ver . ' 600w, ' . $base . 'hero-1200.webp' . $ver . ' 1200w' );
 		$tag    = preg_replace( '#\ssrc=(["\'])[^"\']*\1#i', ' src="' . $src . '"', $tag, 1 );
 		$tag    = preg_replace( '#\ssrcset=(["\'])[^"\']*\1#i', ' srcset="' . $srcset . '"', $tag, 1 );
 		$tag    = preg_replace( '#\salt=(["\'])[^"\']*\1#i', ' alt="' . esc_attr( self::label( 'name_fa' ) ) . '"', $tag, 1 );

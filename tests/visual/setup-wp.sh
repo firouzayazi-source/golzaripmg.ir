@@ -26,6 +26,6 @@ for p in "$repo"/wp-content/plugins/*/; do
 done
 
 id=$(wp post create --porcelain --post_type=page --post_status=publish --post_title="خدمات آرایش دائم" \
-  --post_content="<p>میکروبلیدینگ ابرو، تاتوی خط چشم و رژ لب دائم. نوبت: ۰۹۱۲۰۰۰۰۰۰۰</p><h2>چه ویژگی هایی زیبانو را متمایز می سازد؟</h2><p><a href='http://instagram.com/somayehgolzari_acamedy'>اینستاگرام</a> <a href='https://smdesign.ir/zibanoo/booking'>رزرو نوبت</a> <a href='tel:02100000000'>تماس</a></p><p>حق چاپ © 2026 - قالب وردپرس توسط راست چین</p><img class='hero-sample' width='1024' height='1024' style='max-width:100%;height:auto' src='/wp-content/uploads/2024/08/asset-6-66b671ba6b039-1024x1024.webp' alt=''>" --allow-root)
+  --post_content="<p>میکروبلیدینگ ابرو، تاتوی خط چشم و رژ لب دائم. نوبت: ۰۹۱۲۰۰۰۰۰۰۰</p><h2>چه ویژگی هایی زیبانو را متمایز می سازد؟</h2><p><a href='http://instagram.com/somayehgolzari_acamedy'>اینستاگرام</a> <a href='https://smdesign.ir/zibanoo/booking'>رزرو نوبت</a> <a href='tel:02100000000'>تماس</a></p><p>حق چاپ © 2026 - قالب وردپرس توسط راست چین</p><img class='hero-sample attachment-full size-full wp-image-2094' width='1200' height='800' style='max-width:100%;height:auto' src='/wp-content/uploads/2023/08/003.webp' alt=''>" --allow-root)
 wp option update show_on_front page --allow-root
 wp option update page_on_front "$id" --allow-root
