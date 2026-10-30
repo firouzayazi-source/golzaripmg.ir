@@ -16,7 +16,8 @@ const PHP_ERR = /(Fatal error|Parse error|Warning:|Notice:|Deprecated:)/;
 
 // صفحه‌ها و بخش‌هایی که باید حاضر باشند.
 const PAGES = [
-  { name: 'home', path: '/', must: ['body'] },
+  { name: 'home', path: '/', must: ['.gz-header', '.gz-hero h1', '#services .gz-card', '#works .gz-grid__item', '.gz-footer'] },
+  { name: 'sample', path: '/?pagename=sample', must: ['body'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
   { name: 'updater', path: '/wp-admin/tools.php?page=golzari-updater', admin: true, must: ['.wrap h1'] },
   { name: 'brand', path: '/wp-admin/options-general.php?page=golzari-brand', admin: true, must: ['.wrap h1', 'input[name="golzari_labels[instagram]"]'] },
@@ -27,13 +28,12 @@ const PAGES = [
 const REGRESSIONS = [
   {
     // ۱۴۰۵/۰۸/۰۸: نام‌های قالب و لینک‌های سایتِ نمونه روی صفحه‌ی اصلی مانده بود.
-    name: 'brand-home',
-    path: '/',
+    name: 'brand-sample',
+    path: '/?pagename=sample',
     check: async (page) => {
       const text = await page.locator('body').innerText();
       if (/زیبانو|راست چین/.test(text)) return 'نامِ قالب هنوز در متنِ صفحه است';
-      if (/لورم ایپسوم|آرامش و اسپا/.test(text)) return 'متنِ نمونه‌ی قالب هنوز در صفحه است';
-      if (!text.includes('اطلاعات مجموعه گلزاری')) return 'عنوانِ اطلاعاتِ مجموعه نیامد';
+      if (/لورم ایپسوم/.test(text)) return 'متنِ نمونه‌ی قالب هنوز در صفحه است';
       if (!text.includes('golzari pmg')) return 'نامِ مجموعه در پایینِ صفحه نیامد';
       const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
       if (hrefs.some((h) => /smdesign\.ir/.test(h))) return 'لینک به سایتِ نمونه‌ی قالب مانده';
@@ -50,6 +50,37 @@ const REGRESSIONS = [
       const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--e-global-color-primary').trim().toLowerCase());
       if (primary !== '#4f7e6e') return `رنگِ اصلی سبز نیست (${primary || 'خالی'})`;
       return null;
+    },
+  },
+  {
+    // ۱۴۰۵/۰۸/۰۸: صفحه‌ی اصلیِ اختصاصی؛ هیچ ردی از قالب، رزرو و تماس و اینستاگرامِ مجموعه.
+    name: 'home-custom',
+    path: '/',
+    check: async (page) => {
+      const html = await page.content();
+      if (/zibanoo|زیبانو|elementor|nour-/i.test(html)) return 'ردِ قالب یا صفحه‌سازِ قالب در صفحه‌ی اصلی';
+      const text = await page.locator('body').innerText();
+      if (!text.includes('اطلاعات مجموعه گلزاری')) return 'بخشِ درباره نیامد';
+      const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
+      if (!hrefs.some((h) => /\/booking\/$/.test(h))) return 'پیوندِ رزرو نیست';
+      if (!hrefs.includes('tel:09129178237')) return 'پیوندِ تماس نیست';
+      if (!hrefs.some((h) => h.includes('instagram.com/golzari_pmg'))) return 'اینستاگرامِ مجموعه نیست';
+      const broken = await page.$$eval('img', (ims) => ims.filter((i) => i.complete && !i.naturalWidth && i.loading !== 'lazy').map((i) => i.src));
+      if (broken.length) return 'عکسِ بارنشده: ' + broken.join(' ');
+      const font = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
+      if (!/GZ/.test(font)) return 'فونتِ مجموعه بار نشد';
+      return null;
+    },
+  },
+  {
+    name: 'home-mobile-menu',
+    path: '/',
+    viewport: 'mobile',
+    check: async (page) => {
+      await page.click('#gz-burger');
+      await page.waitForTimeout(400);
+      const open = await page.$eval('#gz-nav', (n) => n.classList.contains('is-open') && getComputedStyle(n).visibility === 'visible');
+      return open ? null : 'منوی گوشی باز نشد';
     },
   },
 ];

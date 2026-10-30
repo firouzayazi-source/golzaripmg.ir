@@ -24,7 +24,7 @@ class Golzari_Brand {
 	}
 
 	public static function defaults() {
-		return array_merge( self::base_defaults(), Golzari_Brand_Content::defaults() );
+		return array_merge( self::base_defaults(), Golzari_Brand_Content::defaults(), Golzari_Brand_Home::defaults() );
 	}
 
 	private static function base_defaults() {
@@ -146,7 +146,9 @@ class Golzari_Brand {
 		);
 
 		// لینکِ تماس.
-		$tag = preg_replace( '#href=(["\'])tel:[^"\']*\1#i', 'href="tel:' . esc_attr( self::label( 'phone' ) ) . '"', $tag );
+		if ( ! Golzari_Brand_Home::active() ) {
+			$tag = preg_replace( '#href=(["\'])tel:[^"\']*\1#i', 'href="tel:' . esc_attr( self::label( 'phone' ) ) . '"', $tag );
+		}
 
 		return $tag;
 	}

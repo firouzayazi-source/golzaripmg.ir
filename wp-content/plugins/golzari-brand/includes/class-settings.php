@@ -17,7 +17,7 @@ class Golzari_Brand_Settings {
 	}
 
 	public static function fields() {
-		return array_merge( self::base_fields(), Golzari_Brand_Content::titles() );
+		return array_merge( self::base_fields(), Golzari_Brand_Home::titles(), Golzari_Brand_Content::titles() );
 	}
 
 	private static function base_fields() {
@@ -52,7 +52,7 @@ class Golzari_Brand_Settings {
 		$out = array();
 		foreach ( array_keys( self::fields() ) as $key ) {
 			$v = isset( $in[ $key ] ) ? sanitize_text_field( wp_unslash( $in[ $key ] ) ) : '';
-			if ( 'hero' === $key ) {
+			if ( in_array( $key, array( 'hero', 'home' ), true ) ) {
 				$v = '1' === $v ? '1' : '0';
 			} elseif ( 'instagram' === $key ) {
 				$v = preg_replace( '/[^A-Za-z0-9._]/', '', ltrim( $v, '@' ) );
@@ -75,13 +75,18 @@ class Golzari_Brand_Settings {
 		settings_fields( self::PAGE );
 		echo '<table class="form-table" role="presentation">';
 		foreach ( self::fields() as $key => $title ) {
-			if ( 'hero' === $key ) {
+			$checks = array(
+				'hero' => 'عکس‌ها، لوگو و رنگِ مجموعه به جای قالب',
+				'home' => 'صفحه‌ی اصلیِ اختصاصی با سربرگ و پانویسِ مجموعه',
+			);
+			if ( isset( $checks[ $key ] ) ) {
 				printf(
-					'<tr><th scope="row">%1$s</th><td><input type="hidden" name="%2$s[hero]" value="0"><label><input type="checkbox" name="%2$s[hero]" value="1"%3$s> %4$s</label></td></tr>',
+					'<tr><th scope="row">%1$s</th><td><input type="hidden" name="%2$s[%5$s]" value="0"><label><input type="checkbox" name="%2$s[%5$s]" value="1"%3$s> %4$s</label></td></tr>',
 					esc_html( $title ),
 					esc_attr( Golzari_Brand::OPTION ),
-					checked( Golzari_Brand::label( 'hero' ), '1', false ),
-					'عکسِ مجموعه به جای عکسِ پیش‌فرضِ قالب'
+					checked( Golzari_Brand::label( $key ), '1', false ),
+					esc_html( $checks[ $key ] ),
+					esc_attr( $key )
 				);
 				continue;
 			}
