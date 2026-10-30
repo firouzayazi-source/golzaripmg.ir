@@ -66,11 +66,13 @@ class Golzari_Brand {
 		if ( ! is_string( $html ) || '' === $html || false === stripos( $html, '<html' ) ) {
 			return $html;
 		}
+		$html  = Golzari_Brand_Media::html( $html );
 		$parts = preg_split( '#(<script\b.*?</script>|<style\b.*?</style>|<textarea\b.*?</textarea>|<!--.*?-->|<[^>]+>)#is', $html, -1, PREG_SPLIT_DELIM_CAPTURE );
 		if ( false === $parts ) {
 			return $html;
 		}
 		Golzari_Brand_Content::reset();
+		Golzari_Brand_Media::reset();
 		foreach ( $parts as $i => $part ) {
 			if ( '' === $part ) {
 				continue;
@@ -151,7 +153,7 @@ class Golzari_Brand {
 	/** عکسِ بالای صفحه به عکسِ خودِ مجموعه، با زمینه‌ی شفاف. */
 	public static function img( $tag ) {
 		if ( '1' !== self::label( 'hero' ) || ! preg_match( '#\b' . self::HERO_IMG . '\b#', $tag ) ) {
-			return $tag;
+			return Golzari_Brand_Media::img( $tag );
 		}
 		$base   = plugins_url( 'assets/', GOLZARI_BRAND_DIR . 'golzari-brand.php' );
 		$ver    = '?ver=' . GOLZARI_BRAND_VER;
