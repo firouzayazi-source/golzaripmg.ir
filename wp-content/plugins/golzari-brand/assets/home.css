@@ -19,6 +19,8 @@ body.gz{margin:0;font-family:"GZ",Tahoma,sans-serif;color:var(--ink);background:
 .gz h1,.gz h2,.gz h3{margin:0;line-height:1.35;font-weight:900;color:var(--g-dd)}
 .gz p{margin:0}
 .gz svg{width:1.15em;height:1.15em;fill:currentColor;flex:none}
+.gz .skip-link,.gz .screen-reader-text{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gz .skip-link:focus{width:auto;height:auto;clip:auto;z-index:100;top:8px;right:8px;padding:8px 14px;border-radius:10px;background:#fff;color:var(--g-dd);box-shadow:var(--shadow)}
 .gz-wrap{width:100%;max-width:var(--wrap);margin-inline:auto;padding-inline:16px}
 
 /* دکمه‌ها */

@@ -14,6 +14,44 @@ class Golzari_Brand_Home {
 	public static function init() {
 		add_filter( 'template_include', array( __CLASS__, 'template' ), 99 );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'assets' ), 999 );
+		// پرونده‌هایی که دیرتر صف می‌شوند (مثلِ آیکون‌های صفحه‌ساز) پیش از چاپ هم برداشته می‌شوند.
+		add_action( 'wp_print_styles', array( __CLASS__, 'assets' ), 999 );
+		add_action( 'wp_print_footer_scripts', array( __CLASS__, 'assets' ), 0 );
+		add_filter( 'body_class', array( __CLASS__, 'body_class' ), 999 );
+	}
+
+	/** کلاس‌های قالب و صفحه‌ساز روی بدنه‌ی صفحه نمی‌آیند. */
+	public static function body_class( $classes ) {
+		if ( ! self::active() ) {
+			return $classes;
+		}
+		return array_values( array_intersect( $classes, array( 'rtl', 'home', 'logged-in', 'admin-bar', 'gz' ) ) );
+	}
+
+	/** ردهایی از قالب که با صف برداشته نمی‌شوند: پیوندِ داخلِ noscript، برچسبِ سازنده و شیوه‌نامه‌های درون‌خطیِ رنگِ قالب. */
+	public static function clean( $html ) {
+		if ( ! self::active() ) {
+			return $html;
+		}
+		$html = preg_replace( '#<noscript>\s*<link[^>]*(?:/themes/|zibanoo)[^>]*>\s*</noscript>#i', '', $html );
+		$html = preg_replace( '#<meta name="generator" content="Elementor[^>]*>#i', '', $html );
+		$html = preg_replace( '#<link[^>]*(?:/plugins/elementor|/themes/|zibanoo)[^>]*>#i', '', $html );
+		$html = preg_replace_callback(
+			'#<style\b[^>]*>.*?</style>#is',
+			function ( $m ) {
+				return preg_match( '#noorgfx|--e-global|elementor|zibanoo#i', $m[0] ) ? '' : $m[0];
+			},
+			$html
+		);
+		// اسکریپت‌های درون‌خطی که بی صفحه‌ساز کاری ندارند.
+		$html = preg_replace_callback(
+			'#<script\b(?![^>]*\bsrc=)(?![^>]*speculationrules)[^>]*>.*?</script>#is',
+			function ( $m ) {
+				return preg_match( '#elementor#i', $m[0] ) ? '' : $m[0];
+			},
+			$html
+		);
+		return $html;
 	}
 
 	public static function active() {
