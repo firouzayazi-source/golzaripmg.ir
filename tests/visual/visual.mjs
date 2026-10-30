@@ -19,11 +19,29 @@ const PAGES = [
   { name: 'home', path: '/', must: ['body'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
   { name: 'updater', path: '/wp-admin/tools.php?page=golzari-updater', admin: true, must: ['.wrap h1'] },
+  { name: 'brand', path: '/wp-admin/options-general.php?page=golzari-brand', admin: true, must: ['.wrap h1', 'input[name="golzari_labels[instagram]"]'] },
 ];
 
 // هر ایرادی که با اسکرین‌شات خبر داده شد، این‌جا یک وارسیِ تازه می‌گیرد تا برنگردد.
 // { name, path, viewport: 'mobile'|'desktop'|undefined, check: async (page) => 'پیامِ خطا' | null }
-const REGRESSIONS = [];
+const REGRESSIONS = [
+  {
+    // ۱۴۰۵/۰۸/۰۸: نام‌های قالب و لینک‌های سایتِ نمونه روی صفحه‌ی اصلی مانده بود.
+    name: 'brand-home',
+    path: '/',
+    check: async (page) => {
+      const text = await page.locator('body').innerText();
+      if (/زیبانو|راست چین/.test(text)) return 'نامِ قالب هنوز در متنِ صفحه است';
+      if (!text.includes('golzari pmg')) return 'نامِ مجموعه در پایینِ صفحه نیامد';
+      const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
+      if (hrefs.some((h) => /smdesign\.ir/.test(h))) return 'لینک به سایتِ نمونه‌ی قالب مانده';
+      const insta = hrefs.filter((h) => /instagram\.com/.test(h));
+      if (!insta.length || insta.some((h) => !h.includes('golzari_pmg'))) return 'لینکِ اینستاگرام به golzari_pmg نیست';
+      if (!hrefs.includes('tel:09129178237')) return 'لینکِ تماس به شماره‌ی مجموعه نیست';
+      return null;
+    },
+  },
+];
 
 let failures = 0;
 const fail = (msg) => { failures++; console.error('✗ ' + msg); };
