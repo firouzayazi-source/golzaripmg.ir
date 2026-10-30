@@ -65,7 +65,7 @@ const REGRESSIONS = [
       if (!hrefs.some((h) => /\/booking\/$/.test(h))) return 'پیوندِ رزرو نیست';
       if (!hrefs.includes('tel:09129178237')) return 'پیوندِ تماس نیست';
       if (!hrefs.some((h) => h.includes('instagram.com/golzari_pmg'))) return 'اینستاگرامِ مجموعه نیست';
-      const broken = await page.$$eval('img', (ims) => ims.filter((i) => i.complete && !i.naturalWidth && i.loading !== 'lazy').map((i) => i.src));
+      const broken = await page.$$eval('img', (ims) => ims.filter((i) => i.getAttribute('src') && i.complete && !i.naturalWidth && i.loading !== 'lazy').map((i) => i.src));
       if (broken.length) return 'عکسِ بارنشده: ' + broken.join(' ');
       const font = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
       if (!/GZ/.test(font)) return 'فونتِ مجموعه بار نشد';
