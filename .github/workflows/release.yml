@@ -113,16 +113,18 @@ jobs:
           RELAY: ${{ secrets.GOLZARI_RELAY_URL }}
           RELAY_KEY: ${{ secrets.GOLZARI_RELAY_KEY }}
         run: |
-          if [ -z "$RELAY" ]; then
-            echo "::notice::نشانیِ پل (GOLZARI_RELAY_URL) در رمزهای مخزن نیست؛ وارسیِ سایتِ زنده انجام نشد."
-            exit 0
-          fi
+          # مستقیم؛ پل فقط اگر روزی هاست آی‌پیِ خارج را بست و نشانی‌اش در رمزهای مخزن باشد.
           hdr=()
           [ -n "$RELAY_KEY" ] && hdr=(-H "X-Relay-Key: $RELAY_KEY")
           # آرام: هر ۶۰ ثانیه یک درخواست، حداکثر ۳۵ دقیقه.
           for i in $(seq 1 35); do
-            case "$RELAY" in *\?*) sep="&" ;; *) sep="?" ;; esac
-            body=$(curl -sS --max-time 30 "${hdr[@]}" "${RELAY}${sep}path=%2Fwp-json%2Fgolzari%2Fv1%2Fhealth%3Frefresh%3D1" || true)
+            if [ -n "$RELAY" ]; then
+              case "$RELAY" in *\?*) sep="&" ;; *) sep="?" ;; esac
+              url="${RELAY}${sep}path=%2Fwp-json%2Fgolzari%2Fv1%2Fhealth%3Frefresh%3D1"
+            else
+              url="https://golzaripmg.ir/wp-json/golzari/v1/health?refresh=1"
+            fi
+            body=$(curl -sS --max-time 30 "${hdr[@]}" "$url" || true)
             commit=$(echo "$body" | jq -r '.commit // empty' 2>/dev/null || true)
             echo "[$i] سایت: ${commit:0:7}  انتظار: ${GITHUB_SHA::7}"
             if [ "$commit" = "$GITHUB_SHA" ]; then

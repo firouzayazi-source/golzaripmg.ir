@@ -1,8 +1,8 @@
-// عکس از سایتِ زنده از راهِ پل، با حافظه‌ی محلی.
+// عکس از سایتِ زنده (مستقیم، یا از راهِ پل اگر GOLZARI_RELAY_URL باشد)، با حافظه‌ی محلی.
 //   node tools/snap.mjs / --mobile
 //   node tools/snap.mjs /services/ --desktop --refresh
 //   node tools/snap.mjs /wp-json/golzari/v1/status --auth --json
-// بارِ اول از پل می‌خواند و بعد از .cache/relay. هیچ‌وقت در حلقه به سایتِ زنده نزنید.
+// بارِ اول از سایت می‌خواند و بعد از .cache/relay. هیچ‌وقت در حلقه به سایتِ زنده نزنید.
 // --refresh فقط خودِ صفحه را تازه می‌خواند؛ فایل‌های ظاهری از حافظه‌ی محلی می‌آیند.
 import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
@@ -26,10 +26,8 @@ const path = args.find((a) => !a.startsWith('--')) || '/';
 const mobile = !flag('--desktop');
 const out = (() => { const i = args.indexOf('--out'); return i >= 0 ? args[i + 1] : null; })();
 
-if (!RELAY) {
-  console.error('✗ متغیرِ GOLZARI_RELAY_URL تنظیم نشده.');
-  process.exit(1);
-}
+// بی GOLZARI_RELAY_URL مستقیم از سایت می‌خواند؛ پل فقط اگر هاست آی‌پیِ خارج را بست.
+const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 mkdirSync(CACHE, { recursive: true });
 
 // ⛔ هاست با حدودِ ۲۰ اتصالِ هم‌زمان آی‌پی را می‌بندد: حداکثر ۲ هم‌زمان، با فاصله.
@@ -64,9 +62,12 @@ async function relayGet(sitePath, { refresh = false, auth = false } = {}) {
 
   const release = await slot();
   try {
-    const url = `${RELAY}${RELAY.includes('?') ? '&' : '?'}path=${encodeURIComponent(sitePath)}${mobile ? '&ua=mobile' : ''}`;
+    const url = RELAY
+      ? `${RELAY}${RELAY.includes('?') ? '&' : '?'}path=${encodeURIComponent(sitePath)}${mobile ? '&ua=mobile' : ''}`
+      : SITE + sitePath;
     const headers = {};
-    if (RELAY_KEY) headers['X-Relay-Key'] = RELAY_KEY;
+    if (RELAY && RELAY_KEY) headers['X-Relay-Key'] = RELAY_KEY;
+    if (!RELAY && mobile) headers['User-Agent'] = MOBILE_UA;
     if (auth && WP_USER && WP_PASS) headers.Authorization = 'Basic ' + Buffer.from(`${WP_USER}:${WP_PASS}`).toString('base64');
     const res = await fetch(url, { headers, signal: AbortSignal.timeout(30000) });
     const body = Buffer.from(await res.arrayBuffer());
