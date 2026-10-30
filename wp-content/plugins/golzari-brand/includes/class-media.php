@@ -45,7 +45,6 @@ class Golzari_Brand_Media {
 			array( 'remo-eyeliner', 2 ),
 			array( 'work-1', 3 ),
 			array( 'work-2', 3 ),
-			array( 'course', 3 ),
 			array( 'class-1', 3 ),
 			array( 'class-2', 3 ),
 			array( 'cert-1', 3 ),
@@ -152,6 +151,10 @@ class Golzari_Brand_Media {
 			$css .= '.elementor-element-22f7a87 img,.elementor-element-2ec482d img,.elementor-element-0bf1c58 img{object-fit:cover}';
 			// پس‌زمینه‌ی ستاره‌ای به سبزِ ملایم.
 			$css .= '.elementor-element-ed0c954:not(.elementor-motion-effects-element-type-background){background-image:linear-gradient(180deg,' . self::GREEN_SOFT . ',#f7faf9)!important}';
+			// متن‌هایی که قالب تقریباً سفید یا توخالی گذاشته، پُر و خوانا.
+			$css .= '.elementor-2125{--e-global-color-noorgfx_palette_6:#2f3e3a}';
+			$css .= '.elementor-element-5b7b012 .elementor-heading-title,.elementor-element-657cd7c .elementor-heading-title,.elementor-element-91d40a0 .elementor-heading-title,.elementor-element-24f3405 .elementor-heading-title,.elementor-element-1fb197e .elementor-heading-title{color:' . $g . '!important;-webkit-text-stroke-width:0!important;stroke-width:0!important;text-decoration:none!important}';
+			$css .= '.elementor-element-9798ec2 .nour-animated-link{color:' . $g . '!important}';
 			// عکسِ خدمات گرد.
 			$css .= '.elementor-element-aa8dada .elementor-image-box-img,.elementor-element-f4d6715 .elementor-image-box-img,.elementor-element-5c4e16c .elementor-image-box-img{width:120px!important;max-width:none!important;flex:0 0 120px}';
 			$css .= '.elementor-element-aa8dada img,.elementor-element-f4d6715 img,.elementor-element-5c4e16c img{width:120px!important;height:120px!important;max-width:none!important;aspect-ratio:1/1;object-fit:cover;border-radius:50%}';
