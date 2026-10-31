@@ -30,7 +30,7 @@ class Golzari_Brand_Home {
 
 	/** ردهایی از قالب که با صف برداشته نمی‌شوند: پیوندِ داخلِ noscript، برچسبِ سازنده و شیوه‌نامه‌های درون‌خطیِ رنگِ قالب. */
 	public static function clean( $html ) {
-		if ( ! self::active() ) {
+		if ( ! self::active() && 'golzari-site' !== get_stylesheet() ) {
 			return $html;
 		}
 		$html = preg_replace( '#<noscript>\s*<link[^>]*(?:/themes/|zibanoo)[^>]*>\s*</noscript>#i', '', $html );

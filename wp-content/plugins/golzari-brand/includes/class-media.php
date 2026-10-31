@@ -176,7 +176,8 @@ class Golzari_Brand_Media {
 
 	/** رنگ‌ها و پنهان‌کردن‌ها؛ فقط در صفحه‌ی اصلی، جز رنگ که همه‌جا یکی است. */
 	public static function css() {
-		if ( is_admin() || '1' !== golzari_label( 'hero' ) || Golzari_Brand_Home::active() ) {
+		// با قالبِ «گلزاری» رنگ و بخش‌های قالبِ قبلی دیگر نیست که جایگزین شود.
+		if ( is_admin() || '1' !== golzari_label( 'hero' ) || Golzari_Brand_Home::active() || 'golzari-site' === get_stylesheet() ) {
 			return;
 		}
 		$g   = self::GREEN;
