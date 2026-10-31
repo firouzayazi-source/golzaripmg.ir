@@ -9,7 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require __DIR__ . '/parts/vars.php';
 $gz_body = 'gz gz-booking';
-$steps   = array( 'b_step1', 'b_step2', 'b_step3', 'b_step4' );
+$steps   = array( 'b_step1', 'b_step_staff', 'b_step2', 'b_step3', 'b_step4' );
+$people  = Golzari_Brand_Booking::staff();
 require __DIR__ . '/parts/head.php';
 require __DIR__ . '/parts/header.php';
 ?>
@@ -44,17 +45,26 @@ require __DIR__ . '/parts/header.php';
 				</fieldset>
 
 				<fieldset class="gz-field">
-					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 2 ) . '. ' . $l( 'b_step2' ) ); ?></legend>
+					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 2 ) . '. ' . $l( 'b_step_staff' ) ); ?></legend>
+					<div class="gz-choices" id="gz-staff">
+						<?php $first = true; foreach ( $people as $key => $name ) : ?>
+							<label class="gz-choice gz-choice--person"><input type="radio" name="staff" value="<?php echo esc_attr( $key ); ?>"<?php echo $first ? ' checked' : ''; ?>><span><?php echo esc_html( $name ); ?></span></label>
+						<?php $first = false; endforeach; ?>
+					</div>
+				</fieldset>
+
+				<fieldset class="gz-field">
+					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 3 ) . '. ' . $l( 'b_step2' ) ); ?></legend>
 					<div class="gz-days" id="gz-days"><p class="gz-muted"><?php echo esc_html( $l( 'b_loading' ) ); ?></p></div>
 				</fieldset>
 
 				<fieldset class="gz-field">
-					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 3 ) . '. ' . $l( 'b_step3' ) ); ?></legend>
+					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 4 ) . '. ' . $l( 'b_step3' ) ); ?></legend>
 					<div class="gz-times" id="gz-times"><p class="gz-muted">—</p></div>
 				</fieldset>
 
 				<fieldset class="gz-field">
-					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 4 ) . '. ' . $l( 'b_step4' ) ); ?></legend>
+					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 5 ) . '. ' . $l( 'b_step4' ) ); ?></legend>
 					<div class="gz-inputs">
 						<label><span><?php echo esc_html( $l( 'b_name' ) ); ?></span><input type="text" name="name" autocomplete="name" required></label>
 						<label><span><?php echo esc_html( $l( 'b_phone' ) ); ?></span><input type="tel" name="phone" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="۰۹۱۲۱۲۳۴۵۶۷" required></label>

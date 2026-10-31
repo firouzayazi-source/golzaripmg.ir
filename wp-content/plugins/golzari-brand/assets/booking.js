@@ -22,11 +22,16 @@
 		err.textContent = m || '';
 		err.hidden = !m;
 	}
+	function staff() {
+		var s = form.querySelector('input[name="staff"]:checked');
+		return s ? s.value : '';
+	}
 	function step() {
 		var n = 1;
 		if (form.querySelector('input[name="service"]:checked')) n = 2;
-		if (n === 2 && pick.date) n = 3;
-		if (n === 3 && pick.time) n = 4;
+		if (n === 2 && staff()) n = 3;
+		if (n === 3 && pick.date) n = 4;
+		if (n === 4 && pick.time) n = 5;
 		steps.forEach(function (s, i) {
 			s.classList.toggle('is-on', i < n);
 		});
@@ -85,7 +90,10 @@
 	}
 
 	function load() {
-		fetch(C.api + (C.api.indexOf('?') > -1 ? '&' : '?') + '_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store' })
+		var sep = C.api.indexOf('?') > -1 ? '&' : '?';
+		pick.date = '';
+		pick.time = '';
+		fetch(C.api + sep + 'staff=' + encodeURIComponent(staff()) + '&_=' + Date.now(), { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.json(); })
 			.then(function (j) {
 				data = j;
@@ -102,12 +110,16 @@
 			showErr('');
 			step();
 		}
+		if (e.target.name === 'staff') {
+			showErr('');
+			load();
+		}
 	});
 
 	form.addEventListener('submit', function (e) {
 		e.preventDefault();
 		var svc = form.querySelector('input[name="service"]:checked');
-		if (!svc || !pick.date || !pick.time) return showErr(M.b_err_pick);
+		if (!svc || !staff() || !pick.date || !pick.time) return showErr(M.b_err_pick);
 		var name = form.name.value.trim();
 		if (name.length < 2) return showErr(M.b_err_name);
 		var phone = form.phone.value.replace(/[۰-۹]/g, function (c) { return '۰۱۲۳۴۵۶۷۸۹'.indexOf(c); }).replace(/\D/g, '');
@@ -121,6 +133,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				service: svc.value,
+				staff: staff(),
 				date: pick.date,
 				time: pick.time,
 				name: name,
@@ -140,7 +153,7 @@
 				}
 				var dl = document.getElementById('gz-done-list');
 				dl.innerHTML = '';
-				[[M.b_step1, j.summary.service], [M.b_step2, j.summary.date], [M.b_step3, j.summary.time], [M.b_name, j.summary.name]].forEach(function (p) {
+				[[M.b_step1, j.summary.service], [M.b_step_staff, j.summary.staff], [M.b_step2, j.summary.date], [M.b_step3, j.summary.time], [M.b_name, j.summary.name]].forEach(function (p) {
 					var row = el('div', 'gz-done__row');
 					row.appendChild(el('dt', null, p[0]));
 					row.appendChild(el('dd', null, p[1]));

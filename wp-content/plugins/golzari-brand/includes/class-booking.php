@@ -47,6 +47,7 @@ class Golzari_Brand_Booking {
 			'b_title'      => 'رزرو نوبت',
 			'b_lead'       => 'خدمت، روز و ساعتِ دلخواه را انتخاب کنید؛ پس از ثبت، برای هماهنگیِ نهایی با شما تماس می‌گیریم.',
 			'b_step1'      => 'خدمت',
+			'b_step_staff' => 'پیگمنتر',
 			'b_step2'      => 'روز',
 			'b_step3'      => 'ساعت',
 			'b_step4'      => 'مشخصات',
@@ -61,7 +62,7 @@ class Golzari_Brand_Booking {
 			'b_done_text'  => 'برای هماهنگیِ نهایی به‌زودی با شما تماس می‌گیریم.',
 			'b_err_phone'  => 'شماره‌ی همراه را درست وارد کنید (مثلِ ۰۹۱۲۱۲۳۴۵۶۷).',
 			'b_err_name'   => 'نام را وارد کنید.',
-			'b_err_pick'   => 'خدمت، روز و ساعت را انتخاب کنید.',
+			'b_err_pick'   => 'خدمت، پیگمنتر، روز و ساعت را انتخاب کنید.',
 			'b_err_taken'  => 'این ساعت همین حالا رزرو شد؛ ساعتِ دیگری انتخاب کنید.',
 			'b_err_limit'  => 'تعدادِ درخواست‌ها زیاد است؛ کمی بعد دوباره امتحان کنید یا تماس بگیرید.',
 			'b_err_net'    => 'ارتباط برقرار نشد؛ دوباره امتحان کنید یا تماس بگیرید.',
@@ -69,7 +70,6 @@ class Golzari_Brand_Booking {
 			'b_side_1'     => 'لطفاً ده دقیقه زودتر تشریف بیاورید.',
 			'b_side_2'     => 'برای لغو یا جابه‌جاییِ نوبت تماس بگیرید.',
 			'b_side_3'     => 'همه‌ی کارها با مواد اصلی و اورجینال فی انجام می‌شود.',
-			'b_serv_extra' => 'مشاوره و آموزش',
 		);
 	}
 
@@ -84,20 +84,30 @@ class Golzari_Brand_Booking {
 	/** پیام‌هایی که اسکریپتِ صفحه‌ی رزرو لازم دارد. */
 	public static function js_labels() {
 		$out = array();
-		foreach ( array( 'b_loading', 'b_nofree', 'b_closed', 'b_done_title', 'b_done_text', 'b_err_phone', 'b_err_name', 'b_err_pick', 'b_err_taken', 'b_err_limit', 'b_err_net', 'b_submit', 'b_step1', 'b_step2', 'b_step3', 'b_name' ) as $k ) {
+		foreach ( array( 'b_loading', 'b_nofree', 'b_closed', 'b_done_title', 'b_done_text', 'b_err_phone', 'b_err_name', 'b_err_pick', 'b_err_taken', 'b_err_limit', 'b_err_net', 'b_submit', 'b_step1', 'b_step_staff', 'b_step2', 'b_step3', 'b_name' ) as $k ) {
 			$out[ $k ] = golzari_label( $k );
 		}
 		return $out;
 	}
 
-	/** خدمت‌های قابلِ رزرو: کلید => نام. */
+	/** خدمت‌های قابلِ رزرو: کلید => نام (از تنظیماتِ نوبت). */
 	public static function services() {
-		return array(
-			's1' => golzari_label( 's1_t' ),
-			's2' => golzari_label( 's2_t' ),
-			's3' => golzari_label( 's3_t' ),
-			's4' => golzari_label( 'b_serv_extra' ),
-		);
+		return (array) self::opts()['services'];
+	}
+
+	/** پیگمنترها: کلید => نام (از تنظیماتِ نوبت). نخستین، پیش‌فرض است. */
+	public static function staff() {
+		return (array) self::opts()['staff'];
+	}
+
+	/** پیگمنترِ یک نوبت؛ نوبت‌های پیش از افزوده شدنِ پیگمنتر به نخستین پیگمنتر تعلق دارند. */
+	private static function staff_of( $id ) {
+		$k = (string) get_post_meta( $id, '_gz_staff', true );
+		if ( '' === $k ) {
+			$keys = array_keys( self::staff() );
+			$k    = $keys ? (string) $keys[0] : '';
+		}
+		return $k;
 	}
 
 	/* ---------- تنظیمات ---------- */
@@ -115,6 +125,16 @@ class Golzari_Brand_Booking {
 				'lead'     => 2,
 				'capacity' => 1,
 				'notify'   => '1',
+				'services' => array(
+					'remo-brow'  => 'ریمو ابرو',
+					'remo-lip'   => 'ریمو لب',
+					'remo-liner' => 'ریمو خط چشم',
+					'fibrosis'   => 'فیبروز ابرو',
+					'general'    => 'خدمات عمومی',
+				),
+				'staff'    => array(
+					'golzari' => 'سمیه گلزاری',
+				),
 			)
 		);
 	}
@@ -159,8 +179,8 @@ class Golzari_Brand_Booking {
 
 	/* ---------- ساعت‌های آزاد ---------- */
 
-	/** شمارِ نوبت‌های فعال در هر «تاریخ ساعت» میانِ دو تاریخ. */
-	private static function taken( $from, $to ) {
+	/** شمارِ نوبت‌های فعالِ یک پیگمنتر در هر «تاریخ ساعت» میانِ دو تاریخ. */
+	private static function taken( $from, $to, $staff ) {
 		$q   = new WP_Query(
 			array(
 				'post_type'      => self::CPT,
@@ -186,6 +206,9 @@ class Golzari_Brand_Booking {
 		);
 		$out = array();
 		foreach ( $q->posts as $id ) {
+			if ( self::staff_of( $id ) !== $staff ) {
+				continue;
+			}
 			$k         = get_post_meta( $id, '_gz_date', true ) . ' ' . get_post_meta( $id, '_gz_time', true );
 			$out[ $k ] = ( isset( $out[ $k ] ) ? $out[ $k ] : 0 ) + 1;
 		}
@@ -193,14 +216,14 @@ class Golzari_Brand_Booking {
 	}
 
 	/** ساعت‌های هر روزِ کاری، با آزاد یا پر بودن. */
-	public static function availability() {
+	public static function availability( $staff ) {
 		$o     = self::opts();
 		$tz    = wp_timezone();
 		$now   = new DateTimeImmutable( 'now', $tz );
 		$min   = $now->modify( '+' . (int) $o['lead'] . ' hours' );
 		$today = $now->setTime( 0, 0 );
 		$last  = $today->modify( '+' . ( (int) $o['ahead'] - 1 ) . ' days' );
-		$taken = self::taken( $today->format( 'Y-m-d' ), $last->format( 'Y-m-d' ) );
+		$taken = self::taken( $today->format( 'Y-m-d' ), $last->format( 'Y-m-d' ), $staff );
 		list( $sh, $sm ) = array_map( 'intval', explode( ':', $o['start'] ) );
 		list( $eh, $em ) = array_map( 'intval', explode( ':', $o['end'] ) );
 		$days = array();
@@ -264,11 +287,19 @@ class Golzari_Brand_Booking {
 		return $r;
 	}
 
-	public static function rest_get() {
+	public static function rest_get( WP_REST_Request $req ) {
+		$staff = self::staff();
+		$pick  = sanitize_key( (string) $req->get_param( 'staff' ) );
+		if ( ! isset( $staff[ $pick ] ) ) {
+			$keys = array_keys( $staff );
+			$pick = $keys ? (string) $keys[0] : '';
+		}
 		return self::fresh(
 			array(
 				'services' => self::services(),
-				'days'     => self::availability(),
+				'staff'    => $staff,
+				'current'  => $pick,
+				'days'     => '' === $pick ? array() : self::availability( $pick ),
 			)
 		);
 	}
@@ -305,6 +336,8 @@ class Golzari_Brand_Booking {
 		$phone   = self::normalize_phone( $req->get_param( 'phone' ) );
 		$note    = sanitize_textarea_field( (string) $req->get_param( 'note' ) );
 		$service = sanitize_key( (string) $req->get_param( 'service' ) );
+		$staff   = sanitize_key( (string) $req->get_param( 'staff' ) );
+		$people  = self::staff();
 		$date    = (string) $req->get_param( 'date' );
 		$time    = (string) $req->get_param( 'time' );
 		$servs   = self::services();
@@ -315,13 +348,13 @@ class Golzari_Brand_Booking {
 		if ( '' === $phone ) {
 			return $err( 'b_err_phone' );
 		}
-		if ( ! isset( $servs[ $service ] ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+		if ( ! isset( $servs[ $service ] ) || ! isset( $people[ $staff ] ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
 			return $err( 'b_err_pick' );
 		}
 
 		// ساعت باید همین حالا در فهرستِ آزادها باشد.
 		$free = false;
-		foreach ( self::availability() as $d ) {
+		foreach ( self::availability( $staff ) as $d ) {
 			if ( $d['d'] !== $date ) {
 				continue;
 			}
@@ -339,7 +372,7 @@ class Golzari_Brand_Booking {
 			array(
 				'post_type'   => self::CPT,
 				'post_status' => 'private',
-				'post_title'  => $name . ' — ' . $date . ' ' . $time,
+				'post_title'  => $name . ' — ' . $date . ' ' . $time . ' — ' . ( isset( $people[ $staff ] ) ? $people[ $staff ] : '' ),
 			),
 			true
 		);
@@ -351,11 +384,13 @@ class Golzari_Brand_Booking {
 		update_post_meta( $id, '_gz_name', $name );
 		update_post_meta( $id, '_gz_phone', $phone );
 		update_post_meta( $id, '_gz_service', $service );
+		update_post_meta( $id, '_gz_service_name', $servs[ $service ] );
+		update_post_meta( $id, '_gz_staff', $staff );
 		update_post_meta( $id, '_gz_note', $note );
 		update_post_meta( $id, '_gz_status', 'pending' );
 
 		// دو درخواستِ هم‌زمان برای یک ساعت: اگر از ظرفیت گذشت، این یکی پس گرفته می‌شود.
-		$taken = self::taken( $date, $date );
+		$taken = self::taken( $date, $date, $staff );
 		if ( ( isset( $taken[ "$date $time" ] ) ? $taken[ "$date $time" ] : 0 ) > (int) self::opts()['capacity'] ) {
 			wp_delete_post( $id, true );
 			return $err( 'b_err_taken', 409 );
@@ -369,6 +404,7 @@ class Golzari_Brand_Booking {
 				'ok'      => true,
 				'summary' => array(
 					'service' => $servs[ $service ],
+					'staff'   => $people[ $staff ],
 					'date'    => self::jdate( $date ),
 					'time'    => Golzari_Brand::fa_digits( $time ),
 					'name'    => $name,
@@ -381,15 +417,14 @@ class Golzari_Brand_Booking {
 		if ( '1' !== self::opts()['notify'] ) {
 			return;
 		}
-		$servs = self::services();
-		$s     = get_post_meta( $id, '_gz_service', true );
 		$body  = implode(
 			"\n",
 			array(
 				'نوبتِ تازه:',
 				'نام: ' . get_post_meta( $id, '_gz_name', true ),
 				'همراه: ' . get_post_meta( $id, '_gz_phone', true ),
-				'خدمت: ' . ( isset( $servs[ $s ] ) ? $servs[ $s ] : $s ),
+				'خدمت: ' . self::service_name( $id ),
+				'پیگمنتر: ' . self::staff_name( $id ),
 				'زمان: ' . self::jdate( get_post_meta( $id, '_gz_date', true ) ) . ' ساعتِ ' . Golzari_Brand::fa_digits( get_post_meta( $id, '_gz_time', true ) ),
 				'توضیح: ' . get_post_meta( $id, '_gz_note', true ),
 				'',
@@ -397,6 +432,20 @@ class Golzari_Brand_Booking {
 			)
 		);
 		wp_mail( get_option( 'admin_email' ), 'نوبتِ تازه — ' . get_post_meta( $id, '_gz_name', true ), $body );
+	}
+
+	/** نامِ خدمت؛ اگر خدمت بعداً از فهرست برداشته شد، نامِ ذخیره‌شده. */
+	public static function service_name( $id ) {
+		$servs = self::services();
+		$k     = (string) get_post_meta( $id, '_gz_service', true );
+		$saved = (string) get_post_meta( $id, '_gz_service_name', true );
+		return isset( $servs[ $k ] ) ? $servs[ $k ] : ( '' !== $saved ? $saved : $k );
+	}
+
+	public static function staff_name( $id ) {
+		$staff = self::staff();
+		$k     = self::staff_of( $id );
+		return isset( $staff[ $k ] ) ? $staff[ $k ] : $k;
 	}
 
 	/* ---------- پیشخوان ---------- */
@@ -462,9 +511,9 @@ class Golzari_Brand_Booking {
 			esc_url( add_query_arg( 'view', 'past', $base ) ),
 			'past' === $view ? ' class="current"' : ''
 		);
-		echo '<table class="widefat striped" style="clear:both"><thead><tr><th>زمان</th><th>نام</th><th>همراه</th><th>خدمت</th><th>توضیح</th><th>وضعیت</th><th>کار</th></tr></thead><tbody>';
+		echo '<table class="widefat striped" style="clear:both"><thead><tr><th>زمان</th><th>نام</th><th>همراه</th><th>خدمت</th><th>پیگمنتر</th><th>توضیح</th><th>وضعیت</th><th>کار</th></tr></thead><tbody>';
 		if ( ! $rows ) {
-			echo '<tr><td colspan="7">نوبتی نیست.</td></tr>';
+			echo '<tr><td colspan="8">نوبتی نیست.</td></tr>';
 		}
 		foreach ( $rows as $p ) {
 			$m      = function ( $k ) use ( $p ) {
@@ -476,7 +525,8 @@ class Golzari_Brand_Booking {
 			echo '<td>' . esc_html( self::jdate( $m( 'date' ) ) . ' — ' . Golzari_Brand::fa_digits( $m( 'time' ) ) ) . '</td>';
 			echo '<td>' . esc_html( $m( 'name' ) ) . '</td>';
 			echo '<td><a href="' . esc_url( 'tel:' . $m( 'phone' ) ) . '" dir="ltr">' . esc_html( Golzari_Brand::fa_digits( $m( 'phone' ) ) ) . '</a></td>';
-			echo '<td>' . esc_html( isset( $servs[ $svc ] ) ? $servs[ $svc ] : $svc ) . '</td>';
+			echo '<td>' . esc_html( self::service_name( $p->ID ) ) . '</td>';
+			echo '<td>' . esc_html( self::staff_name( $p->ID ) ) . '</td>';
 			echo '<td>' . esc_html( $m( 'note' ) ) . '</td>';
 			echo '<td>' . esc_html( self::status_label( $status ) ) . '</td>';
 			echo '<td>';
@@ -554,13 +604,49 @@ class Golzari_Brand_Booking {
 		echo '<tr><th>شروعِ کار</th><td>' . self::select( 'start', $o['start'], $hours ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<tr><th>پایانِ کار</th><td>' . self::select( 'end', $o['end'], $hours ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<tr><th>مدتِ هر نوبت (دقیقه)</th><td>' . self::select( 'slot', $o['slot'], $fa( array( 30, 45, 60, 90, 120, 180 ) ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
-		echo '<tr><th>نوبت‌های هم‌زمان در هر ساعت</th><td>' . self::select( 'capacity', $o['capacity'], $fa( array( 1, 2, 3, 4 ) ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
+		echo '<tr><th>نوبت‌های هم‌زمانِ هر پیگمنتر در هر ساعت</th><td>' . self::select( 'capacity', $o['capacity'], $fa( array( 1, 2, 3, 4 ) ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<tr><th>چند روزِ آینده قابلِ رزرو</th><td>' . self::select( 'ahead', $o['ahead'], $fa( array( 7, 14, 21, 30, 45, 60 ) ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<tr><th>کم‌ترین فاصله تا نوبت (ساعت)</th><td>' . self::select( 'lead', $o['lead'], $fa( array( 0, 1, 2, 3, 6, 12, 24 ) ) ) . '</td></tr>'; // phpcs:ignore WordPress.Security.EscapeOutput
 		printf( '<tr><th>رایانامه‌ی نوبتِ تازه</th><td><input type="hidden" name="notify" value="0"><label><input type="checkbox" name="notify" value="1"%s> به رایانامه‌ی مدیرِ سایت فرستاده شود</label></td></tr>', checked( $o['notify'], '1', false ) );
+		echo self::list_rows( 'services', 'خدمت‌ها', $o['services'], 'خدمتِ تازه' ); // phpcs:ignore WordPress.Security.EscapeOutput
+		echo self::list_rows( 'staff', 'پیگمنترها', $o['staff'], 'پیگمنترِ تازه' ); // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '</table>';
 		submit_button( 'ذخیره' );
 		echo '</form></div>';
+	}
+
+	/** فهرستِ نام‌ها: هر سطر قابلِ ویرایش، با تیکِ برداشتن؛ یک سطرِ خالی برای افزودن. */
+	private static function list_rows( $name, $title, $items, $placeholder ) {
+		$h = '<tr><th>' . esc_html( $title ) . '</th><td>';
+		foreach ( (array) $items as $k => $v ) {
+			$h .= sprintf(
+				'<p><input type="text" class="regular-text" name="%1$s[%2$s]" value="%3$s"> <label><input type="checkbox" name="%1$s_remove[]" value="%2$s"> برداشتن</label></p>',
+				esc_attr( $name ),
+				esc_attr( $k ),
+				esc_attr( $v )
+			);
+		}
+		$h .= sprintf( '<p><input type="text" class="regular-text" name="%s_new" placeholder="%s"></p>', esc_attr( $name ), esc_attr( $placeholder ) );
+		return $h . '</td></tr>';
+	}
+
+	/** فهرستِ نام‌ها از فرم؛ دست‌کم یک مورد می‌ماند. */
+	private static function list_save( $in, $name, $old ) {
+		$remove = isset( $in[ $name . '_remove' ] ) ? array_map( 'sanitize_key', (array) $in[ $name . '_remove' ] ) : array();
+		$out    = array();
+		foreach ( isset( $in[ $name ] ) ? (array) $in[ $name ] : array() as $k => $v ) {
+			$k = sanitize_key( $k );
+			$v = sanitize_text_field( $v );
+			if ( '' !== $k && '' !== $v && ! in_array( $k, $remove, true ) ) {
+				$out[ $k ] = $v;
+			}
+		}
+		$new = isset( $in[ $name . '_new' ] ) ? sanitize_text_field( $in[ $name . '_new' ] ) : '';
+		if ( '' !== $new ) {
+			$k = substr( $name, 0, 2 ) . '-' . substr( md5( $new . microtime() ), 0, 6 );
+			$out[ $k ] = $new;
+		}
+		return $out ? $out : $old;
 	}
 
 	public static function admin_opts() {
@@ -590,6 +676,8 @@ class Golzari_Brand_Booking {
 				'ahead'    => (int) $pick( isset( $in['ahead'] ) ? $in['ahead'] : '', array( 7, 14, 21, 30, 45, 60 ), 14 ),
 				'lead'     => (int) $pick( isset( $in['lead'] ) ? $in['lead'] : '', array( 0, 1, 2, 3, 6, 12, 24 ), 2 ),
 				'notify'   => isset( $in['notify'] ) && '1' === $in['notify'] ? '1' : '0',
+				'services' => self::list_save( $in, 'services', self::opts()['services'] ),
+				'staff'    => self::list_save( $in, 'staff', self::opts()['staff'] ),
 			),
 			false
 		);

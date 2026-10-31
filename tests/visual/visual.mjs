@@ -20,7 +20,7 @@ const PAGES = [
   { name: 'sample', path: '/?pagename=sample', must: ['body'] },
   { name: 'booking', path: '/?pagename=booking', must: ['.gz-header', '.gz-bookform', '.gz-footer'] },
   { name: 'bookings-admin', path: '/wp-admin/admin.php?page=golzari-bookings', admin: true, must: ['.wrap h1'] },
-  { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]'] },
+  { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]', 'input[name="staff[golzari]"]', 'input[name="services[fibrosis]"]'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
   { name: 'updater', path: '/wp-admin/tools.php?page=golzari-updater', admin: true, must: ['.wrap h1'] },
   { name: 'brand', path: '/wp-admin/options-general.php?page=golzari-brand', admin: true, must: ['.wrap h1', 'input[name="golzari_labels[instagram]"]'] },
@@ -96,6 +96,9 @@ const REGRESSIONS = [
       } catch (e) {
         return 'نوبت ثبت نشد: ' + (await page.$eval('#gz-formerr', (x) => x.textContent).catch(() => ''));
       }
+      // ۱۴۰۵/۰۸/۰۹: پیگمنتر در خلاصه‌ی نوبت.
+      const done = await page.locator('#gz-done').innerText();
+      if (!done.includes('سمیه گلزاری')) return 'نامِ پیگمنتر در خلاصه‌ی نوبت نیست';
       return null;
     },
   },
