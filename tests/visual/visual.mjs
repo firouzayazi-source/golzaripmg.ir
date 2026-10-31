@@ -51,9 +51,8 @@ const REGRESSIONS = [
       // ۱۴۰۵/۰۸/۰۸: لوگوی زیبانو در منوی گوشی مانده بود.
       const logo = await page.$eval('img.logo-sample', (img) => img.src).catch(() => '');
       if (!logo.includes('golzari-brand/assets/logo.webp')) return 'لوگوی قالب به لوگوی مجموعه عوض نشد';
-      // رنگِ اصلیِ صفحه‌ساز سبزِ نوارِ بالاست، نه بنفشِ قالب.
-      const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--e-global-color-primary').trim().toLowerCase());
-      if (primary !== '#4f7e6e') return `رنگِ اصلی سبز نیست (${primary || 'خالی'})`;
+      // ۱۴۰۵/۰۸/۰۹: با قالبِ «گلزاری» هیچ ردی از قالبِ قبلی و صفحه‌ساز نمی‌ماند.
+      if (/zibanoo|elementor|noorgfx/i.test(await page.content())) return 'ردِ قالبِ قبلی یا صفحه‌ساز در صفحه';
       return null;
     },
   },
