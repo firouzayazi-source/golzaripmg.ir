@@ -2,7 +2,7 @@
 /**
  * Plugin Name: گلزاری — شخصی‌سازی
  * Description: صفحه‌ی اصلی و صفحه‌ی رزروِ اختصاصیِ مجموعه‌ی گلزاری با سربرگ و پانویسِ خودمان، سیستمِ نوبت‌دهی، و جایگزینیِ نام‌ها، متن‌ها، عکس‌ها، لوگو و رنگِ قالب در بقیه‌ی صفحه‌ها؛ فقط در نمایش، بی دست زدن به قالب یا پایگاهِ داده.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: گلزاری
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLZARI_BRAND_VER', '2.2.0' );
+define( 'GOLZARI_BRAND_VER', '2.2.1' );
 define( 'GOLZARI_BRAND_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once GOLZARI_BRAND_DIR . 'includes/class-content.php';

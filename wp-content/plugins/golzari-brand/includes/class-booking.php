@@ -511,7 +511,7 @@ class Golzari_Brand_Booking {
 			esc_url( add_query_arg( 'view', 'past', $base ) ),
 			'past' === $view ? ' class="current"' : ''
 		);
-		echo '<table class="widefat striped" style="clear:both"><thead><tr><th>زمان</th><th>نام</th><th>همراه</th><th>خدمت</th><th>پیگمنتر</th><th>توضیح</th><th>وضعیت</th><th>کار</th></tr></thead><tbody>';
+		echo '<div style="clear:both;overflow-x:auto;max-width:100%"><table class="widefat striped" style="min-width:760px"><thead><tr><th>زمان</th><th>نام</th><th>همراه</th><th>خدمت</th><th>پیگمنتر</th><th>توضیح</th><th>وضعیت</th><th>کار</th></tr></thead><tbody>';
 		if ( ! $rows ) {
 			echo '<tr><td colspan="8">نوبتی نیست.</td></tr>';
 		}
@@ -539,7 +539,7 @@ class Golzari_Brand_Booking {
 			}
 			echo '</td></tr>';
 		}
-		echo '</tbody></table></div>';
+		echo '</tbody></table></div></div>';
 	}
 
 	public static function admin_status() {
