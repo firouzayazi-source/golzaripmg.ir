@@ -17,7 +17,7 @@ class Golzari_Brand_Settings {
 	}
 
 	public static function fields() {
-		return array_merge( self::base_fields(), Golzari_Brand_Home::titles(), Golzari_Brand_Content::titles() );
+		return array_merge( self::base_fields(), Golzari_Brand_Home::titles(), Golzari_Brand_Booking::titles(), Golzari_Brand_Content::titles() );
 	}
 
 	private static function base_fields() {

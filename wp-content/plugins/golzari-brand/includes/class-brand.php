@@ -24,7 +24,7 @@ class Golzari_Brand {
 	}
 
 	public static function defaults() {
-		return array_merge( self::base_defaults(), Golzari_Brand_Content::defaults(), Golzari_Brand_Home::defaults() );
+		return array_merge( self::base_defaults(), Golzari_Brand_Content::defaults(), Golzari_Brand_Home::defaults(), Golzari_Brand_Booking::defaults() );
 	}
 
 	private static function base_defaults() {

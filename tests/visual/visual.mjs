@@ -18,6 +18,9 @@ const PHP_ERR = /(Fatal error|Parse error|Warning:|Notice:|Deprecated:)/;
 const PAGES = [
   { name: 'home', path: '/', must: ['.gz-header', '.gz-hero h1', '#services .gz-card', '#works .gz-grid__item', '.gz-footer'] },
   { name: 'sample', path: '/?pagename=sample', must: ['body'] },
+  { name: 'booking', path: '/?pagename=booking', must: ['.gz-header', '.gz-bookform', '.gz-footer'] },
+  { name: 'bookings-admin', path: '/wp-admin/admin.php?page=golzari-bookings', admin: true, must: ['.wrap h1'] },
+  { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
   { name: 'updater', path: '/wp-admin/tools.php?page=golzari-updater', admin: true, must: ['.wrap h1'] },
   { name: 'brand', path: '/wp-admin/options-general.php?page=golzari-brand', admin: true, must: ['.wrap h1', 'input[name="golzari_labels[instagram]"]'] },
@@ -69,6 +72,30 @@ const REGRESSIONS = [
       if (broken.length) return 'عکسِ بارنشده: ' + broken.join(' ');
       const font = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
       if (!/GZ/.test(font)) return 'فونتِ مجموعه بار نشد';
+      return null;
+    },
+  },
+  {
+    // ۱۴۰۵/۰۸/۰۹: سیستمِ نوبت‌دهی؛ یک نوبتِ واقعی از اول تا آخر.
+    name: 'booking-flow',
+    path: '/?pagename=booking',
+    check: async (page) => {
+      const html = await page.content();
+      if (/zibanoo|زیبانو|elementor|sab-select/i.test(html)) return 'ردِ قالب یا فرمِ قالب در صفحه‌ی رزرو';
+      await page.waitForSelector('.gz-day', { timeout: 10000 });
+      await page.click('.gz-choice span');
+      const slot = await page.$('.gz-slot:not([disabled])');
+      if (!slot) return 'ساعتِ آزادی پیدا نشد';
+      await slot.click();
+      await page.fill('input[name="name"]', 'آزمونِ نوبت');
+      await page.fill('input[name="phone"]', '۰۹۱۲۱۲۳۴۵۶۷');
+      await page.waitForTimeout(3500);
+      await page.click('.gz-bookform__submit');
+      try {
+        await page.waitForSelector('#gz-done:not([hidden])', { timeout: 10000 });
+      } catch (e) {
+        return 'نوبت ثبت نشد: ' + (await page.$eval('#gz-formerr', (x) => x.textContent).catch(() => ''));
+      }
       return null;
     },
   },
@@ -153,12 +180,24 @@ for (const vp of VIEWPORTS) {
   for (const def of PAGES.filter((p) => p.admin)) await checkPage(context, vp, def);
 
   for (const r of REGRESSIONS.filter((r) => !r.viewport || r.viewport === vp.name)) {
+    if (r.admin) continue;
     const page = await context.newPage();
     await page.goto(BASE + r.path, { waitUntil: 'networkidle' });
     const msg = await r.check(page);
     if (msg) fail(`${r.name}@${vp.name}: ${msg}`);
     await page.close();
   }
+  await context.close();
+}
+// نوبت‌های آزمون در فهرستِ پیشخوان دیده شوند.
+{
+  const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, locale: 'fa-IR' });
+  await login(context);
+  const page = await context.newPage();
+  await page.goto(BASE + '/wp-admin/admin.php?page=golzari-bookings', { waitUntil: 'networkidle' });
+  const rows = await page.locator('table.widefat tbody tr', { hasText: 'آزمونِ نوبت' }).count();
+  if (rows < 1) fail('نوبتِ ثبت‌شده در فهرستِ پیشخوان نیست');
+  else console.log(`✓ نوبت‌ها در پیشخوان: ${rows}`);
   await context.close();
 }
 await browser.close();

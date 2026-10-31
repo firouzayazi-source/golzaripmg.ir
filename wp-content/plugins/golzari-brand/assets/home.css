@@ -196,3 +196,78 @@ body.gz{margin:0;font-family:"GZ",Tahoma,sans-serif;color:var(--ink);background:
 	.gz-footer{padding-bottom:72px}
 	.gz-float{display:inline-flex;align-items:center;gap:8px;position:fixed;z-index:60;bottom:14px;inset-inline:16px;justify-content:center;padding:14px;border-radius:999px;font-weight:700;color:#fff;background:linear-gradient(135deg,#d9b763,var(--gold) 55%,var(--gold-d));box-shadow:0 12px 30px -10px rgba(168,130,47,.9)}
 }
+
+/* صفحه‌ی رزرو */
+.gz-booking .gz-float{display:none}
+.gz-pagehead{position:relative;overflow:hidden;padding-block:48px 70px;text-align:center;background:radial-gradient(900px 400px at 80% -20%,var(--g-s),transparent 60%),linear-gradient(180deg,var(--g-xs),#fff)}
+.gz-pagehead .gz-kicker{justify-content:center}
+.gz-pagehead h1{font-size:clamp(1.9rem,4vw,3rem);margin-top:10px}
+.gz-pagehead p{max-width:620px;margin:12px auto 0;color:var(--muted)}
+.gz-book{padding-top:0}
+.gz-book__in{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;align-items:start}
+.gz-book__in>*{min-width:0}
+.gz-bookform,.gz-done,.gz-bookside{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 24px 60px -40px rgba(28,53,48,.55)}
+.gz-bookform{padding:clamp(18px,3vw,32px);margin-top:-40px;position:relative;z-index:1}
+.gz-done{padding:40px 28px;text-align:center;margin-top:-40px;position:relative;z-index:1}
+.gz-done__icon{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:var(--g);color:#fff}
+.gz-done__icon svg{width:40px;height:40px}
+.gz-done dl{display:grid;gap:8px;max-width:420px;margin:20px auto;padding:16px;border-radius:var(--r-s);background:var(--g-xs);text-align:right}
+.gz-done__row{display:flex;justify-content:space-between;gap:12px}
+.gz-done dt{color:var(--muted)}
+.gz-done dd{margin:0;font-weight:700;color:var(--g-dd)}
+.gz-done p{color:var(--muted);margin-bottom:20px}
+.gz-steps{list-style:none;margin:0 0 22px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.gz-steps li{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--g-xs);color:var(--muted);font-size:.9rem}
+.gz-steps b{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line);font-size:.85rem}
+.gz-steps li.is-on{background:var(--g-s);color:var(--g-dd);font-weight:700}
+.gz-steps li.is-on b{background:var(--g);border-color:var(--g);color:#fff}
+.gz-field{border:0;margin:0 0 22px;padding:0;min-width:0}
+.gz-field legend{font-weight:900;color:var(--g-dd);margin-bottom:12px;padding:0}
+.gz-muted{color:var(--muted);margin:0}
+.gz-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gz-choice{position:relative;cursor:pointer}
+.gz-choice input{position:absolute;opacity:0;pointer-events:none}
+.gz-choice span{display:flex;align-items:center;min-height:52px;padding:10px 14px;border:1.5px solid var(--line);border-radius:14px;font-weight:700;transition:all .2s}
+.gz-choice span::before{content:"";width:18px;height:18px;margin-inline-end:10px;flex:none;border-radius:50%;border:2px solid var(--line);transition:all .2s}
+.gz-choice input:checked+span{border-color:var(--g);background:var(--g-xs);color:var(--g-dd)}
+.gz-choice input:checked+span::before{border-color:var(--g);background:radial-gradient(circle,var(--g) 45%,transparent 50%)}
+.gz-choice input:focus-visible+span{outline:2px solid var(--gold);outline-offset:2px}
+.gz-days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.gz-day{flex:0 0 auto;scroll-snap-align:start;min-width:84px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border:1.5px solid var(--line);border-radius:14px;background:#fff;font:inherit;color:var(--ink);cursor:pointer;transition:all .2s}
+.gz-day__w{font-size:.8rem;color:var(--muted)}
+.gz-day__d{font-weight:700;font-size:.92rem;white-space:nowrap}
+.gz-day small{font-size:.72rem;color:#b0413e}
+.gz-day:disabled{opacity:.45;cursor:not-allowed;background:var(--g-xs)}
+.gz-day.is-on{border-color:var(--g);background:var(--g);color:#fff}
+.gz-day.is-on .gz-day__w{color:#dfeae6}
+.gz-times{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.gz-slot{font:inherit;font-weight:700;padding:10px 6px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;transition:all .2s}
+.gz-slot:hover:not(:disabled){border-color:var(--g)}
+.gz-slot:disabled{opacity:.4;text-decoration:line-through;cursor:not-allowed;background:var(--g-xs)}
+.gz-slot.is-on{background:var(--g);border-color:var(--g);color:#fff}
+.gz-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.gz-inputs label{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:.92rem}
+.gz-inputs__wide{grid-column:1/-1}
+.gz-inputs input,.gz-inputs textarea{font:inherit;width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);transition:border-color .2s}
+.gz-inputs input[dir="ltr"]{text-align:left}
+.gz-inputs input:focus,.gz-inputs textarea:focus{outline:0;border-color:var(--g);box-shadow:0 0 0 3px var(--g-s)}
+.gz-hp{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;opacity:0}
+.gz-formerr{margin:0 0 14px;padding:10px 14px;border-radius:12px;background:#fbeceb;color:#9b2c2a;font-weight:500}
+.gz-bookform__submit{width:100%;padding:1em;font-size:1.05rem}
+.gz-bookform__submit:disabled{opacity:.6;cursor:wait}
+.gz-bookside{padding:24px;position:sticky;top:calc(var(--head) + 16px)}
+.gz-bookside img{width:56px;height:56px;object-fit:contain}
+.gz-bookside h3{margin:10px 0 14px;font-size:1.15rem}
+.gz-bookside .gz-checks{grid-template-columns:1fr;margin:0 0 18px}
+.gz-bookside .gz-contact{padding-top:16px;border-top:1px solid var(--line)}
+.gz-bookside .gz-contact svg{color:var(--g)}
+@media (max-width:1024px){
+	.gz-book__in{grid-template-columns:minmax(0,1fr)}
+	.gz-bookside{position:static}
+}
+@media (max-width:640px){
+	.gz-steps{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+	.gz-steps li{flex-direction:column;gap:4px;padding:8px 2px;font-size:.75rem;text-align:center}
+	.gz-choices,.gz-inputs{grid-template-columns:1fr}
+	.gz-times{grid-template-columns:repeat(3,minmax(0,1fr))}
+}

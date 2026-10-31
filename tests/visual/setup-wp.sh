@@ -33,3 +33,7 @@ wp option update page_on_front "$id" --allow-root
 # صفحه‌ی دوم با نمونه‌ی متن، لوگو و عکسِ قالب، برای وارسیِ جایگزینی‌ها بیرون از صفحه‌ی اصلی.
 wp post create --post_type=page --post_status=publish --post_name=sample --post_title="خدمات آرایش دائم" \
   --post_content="<p>میکروبلیدینگ ابرو، تاتوی خط چشم و رژ لب دائم. نوبت: ۰۹۱۲۰۰۰۰۰۰۰</p><h2>چه ویژگی هایی زیبانو را متمایز می سازد؟</h2><h3>آرامش و اسپا</h3><p>لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است.</p><p><a href='http://instagram.com/somayehgolzari_acamedy'>اینستاگرام</a> <a href='https://smdesign.ir/zibanoo/booking'>رزرو نوبت</a> <a href='tel:02100000000'>تماس</a></p><p>حق چاپ © 2026 - قالب وردپرس توسط راست چین</p><img class='logo-sample' width='256' height='277' style='max-width:100%;height:auto' src='/wp-content/uploads/2022/11/cropped-logo.png' alt=''><img class='hero-sample attachment-full size-full wp-image-2094' width='1200' height='800' style='max-width:100%;height:auto' src='/wp-content/uploads/2023/08/003.webp' alt=''>" --allow-root
+
+# صفحه‌ی رزرو (نشانیِ /booking/ با پیوندِ یکتای ساده: ?pagename=booking).
+wp post create --post_type=page --post_status=publish --post_name=booking --post_title="دریافت نوبت" \
+  --post_content="<p>فرمِ نوبتِ قالب</p>" --allow-root

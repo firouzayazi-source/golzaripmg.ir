@@ -25,7 +25,7 @@ class Golzari_Brand_Home {
 		if ( ! self::active() ) {
 			return $classes;
 		}
-		return array_values( array_intersect( $classes, array( 'rtl', 'home', 'logged-in', 'admin-bar', 'gz' ) ) );
+		return array_values( array_intersect( $classes, array( 'rtl', 'home', 'logged-in', 'admin-bar', 'gz', 'gz-booking' ) ) );
 	}
 
 	/** ردهایی از قالب که با صف برداشته نمی‌شوند: پیوندِ داخلِ noscript، برچسبِ سازنده و شیوه‌نامه‌های درون‌خطیِ رنگِ قالب. */
@@ -54,8 +54,23 @@ class Golzari_Brand_Home {
 		return $html;
 	}
 
+	/** صفحه‌ای با سربرگ و پانویسِ خودمان: «home» یا «booking»، وگرنه رشته‌ی خالی. */
+	public static function page() {
+		if ( is_admin() || '1' !== golzari_label( 'home' ) ) {
+			return '';
+		}
+		if ( is_front_page() ) {
+			return 'home';
+		}
+		$slug = trim( (string) wp_parse_url( golzari_label( 'booking_path' ), PHP_URL_PATH ), '/' );
+		if ( '' !== $slug && false === strpos( $slug, '/' ) && is_page( $slug ) ) {
+			return 'booking';
+		}
+		return '';
+	}
+
 	public static function active() {
-		return ! is_admin() && is_front_page() && '1' === golzari_label( 'home' );
+		return '' !== self::page();
 	}
 
 	public static function defaults() {
@@ -137,7 +152,8 @@ class Golzari_Brand_Home {
 	}
 
 	public static function template( $template ) {
-		return self::active() ? GOLZARI_BRAND_DIR . 'templates/home.php' : $template;
+		$page = self::page();
+		return '' !== $page ? GOLZARI_BRAND_DIR . 'templates/' . $page . '.php' : $template;
 	}
 
 	/** روی این صفحه فقط شیوه‌نامه و اسکریپتِ خودمان؛ هیچ پرونده‌ای از قالب و صفحه‌سازِ قالب. */
@@ -162,10 +178,26 @@ class Golzari_Brand_Home {
 		$url = plugins_url( 'assets/', GOLZARI_BRAND_DIR . 'golzari-brand.php' );
 		wp_enqueue_style( 'golzari-home', $url . 'home.css', array(), GOLZARI_BRAND_VER );
 		wp_enqueue_script( 'golzari-home', $url . 'home.js', array(), GOLZARI_BRAND_VER, true );
+		if ( 'booking' === self::page() ) {
+			wp_enqueue_script( 'golzari-booking', $url . 'booking.js', array(), GOLZARI_BRAND_VER, true );
+			wp_localize_script(
+				'golzari-booking',
+				'GZBooking',
+				array(
+					'api' => esc_url_raw( rest_url( 'golzari/v1/booking' ) ),
+					'msg' => Golzari_Brand_Booking::js_labels(),
+				)
+			);
+		}
 	}
 
 	public static function img( $name ) {
 		return esc_url( Golzari_Brand_Media::url( $name ) );
+	}
+
+	/** پیوندِ یک بخشِ صفحه‌ی اصلی؛ بیرون از صفحه‌ی اصلی با نشانیِ کامل. */
+	public static function anchor( $id ) {
+		return 'home' === self::page() ? '#' . $id : home_url( '/#' . $id );
 	}
 
 	/** سالِ شمسیِ امروز (برای پانویس). */

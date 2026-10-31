@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: گلزاری — شخصی‌سازی
- * Description: صفحه‌ی اصلیِ اختصاصیِ مجموعه‌ی گلزاری با سربرگ و پانویسِ خودمان، و جایگزینیِ نام‌ها، متن‌ها، عکس‌ها، لوگو و رنگِ قالب در بقیه‌ی صفحه‌ها؛ فقط در نمایش، بی دست زدن به قالب یا پایگاهِ داده.
- * Version: 2.0.1
+ * Description: صفحه‌ی اصلی و صفحه‌ی رزروِ اختصاصیِ مجموعه‌ی گلزاری با سربرگ و پانویسِ خودمان، سیستمِ نوبت‌دهی، و جایگزینیِ نام‌ها، متن‌ها، عکس‌ها، لوگو و رنگِ قالب در بقیه‌ی صفحه‌ها؛ فقط در نمایش، بی دست زدن به قالب یا پایگاهِ داده.
+ * Version: 2.1.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: گلزاری
@@ -13,12 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLZARI_BRAND_VER', '2.0.1' );
+define( 'GOLZARI_BRAND_VER', '2.1.0' );
 define( 'GOLZARI_BRAND_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once GOLZARI_BRAND_DIR . 'includes/class-content.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-media.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-home.php';
+require_once GOLZARI_BRAND_DIR . 'includes/class-booking.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-brand.php';
 require_once GOLZARI_BRAND_DIR . 'includes/class-settings.php';
 
@@ -32,4 +33,5 @@ if ( ! function_exists( 'golzari_label' ) ) {
 Golzari_Brand::init();
 Golzari_Brand_Media::init();
 Golzari_Brand_Home::init();
+Golzari_Brand_Booking::init();
 Golzari_Brand_Settings::init();
