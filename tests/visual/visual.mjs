@@ -207,6 +207,34 @@ for (const vp of VIEWPORTS) {
   else console.log(`✓ نوبت‌ها در پیشخوان: ${rows}`);
   await context.close();
 }
+// ۱۴۰۵/۰۸/۰۹: پاک‌سازیِ قالب: صفحه‌ی اصلی و رزرو قفل‌اند و پس از پاک‌سازی سالم می‌مانند.
+{
+  const context = await browser.newContext({ viewport: { width: 1366, height: 900 }, locale: 'fa-IR' });
+  await login(context);
+  const page = await context.newPage();
+  await page.goto(BASE + '/wp-admin/tools.php?page=golzari-cleanup', { waitUntil: 'networkidle' });
+  const html = await page.content();
+  if (!html.includes('/sample</code>')) fail('برگه‌ی نمونه در فهرستِ پاک‌سازی نیست');
+  if (html.includes('/booking</code>')) fail('صفحه‌ی رزرو در فهرستِ پاک‌سازی آمده؛ باید قفل باشد');
+  await page.check('input[name="confirm"]');
+  await Promise.all([page.waitForNavigation(), page.click('#submit')]);
+  try {
+    await page.waitForSelector('text=پاک‌سازی تمام شد', { timeout: 60000 });
+  } catch (e) {
+    fail('پاک‌سازی تمام نشد');
+  }
+  for (const [path, sel] of [['/', '.gz-hero'], ['/?pagename=booking', '.gz-bookform']]) {
+    const p2 = await context.newPage();
+    await p2.goto(BASE + path, { waitUntil: 'networkidle' });
+    if ((await p2.locator(sel).count()) === 0) fail(`پس از پاک‌سازی ${path} سالم نیست`);
+    await p2.close();
+  }
+  const gone = await context.request.get(BASE + '/?pagename=sample');
+  if (gone.status() !== 404) fail(`برگه‌ی نمونه پس از پاک‌سازی هنوز باز است (${gone.status()})`);
+  console.log('✓ پاک‌سازی');
+  await context.close();
+}
+
 // ۱۴۰۵/۰۸/۰۹: ربات تلگرام از راهِ قلاب: اتصال، فهرست، تنظیمات، و صفِ خبرها.
 {
   const TOKEN = '123456789:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';

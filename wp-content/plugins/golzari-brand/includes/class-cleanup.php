@@ -1,0 +1,297 @@
+<?php
+/**
+ * پاک‌سازیِ چیزهای قالب که دیگر لازم نیست: برگه‌ها و نوشته‌های نمونه، عکس‌های کتابخانه‌ی رسانه،
+ * گونه‌های دیگرِ محتوای قالب و قالب‌های نصب‌شده‌ی دیگر.
+ *
+ * هیچ چیز خودکار پاک نمی‌شود: مدیر فهرست را می‌بیند، تیک می‌زند و تأیید می‌کند.
+ * برگه‌ها و نوشته‌ها به زباله‌دان می‌روند (تا ۳۰ روز برمی‌گردند)؛ عکس‌ها و قالب‌ها همیشگی پاک می‌شوند.
+ * صفحه‌ی اصلی، صفحه‌ی رزرو، لوگو، نمادِ سایت، قالبِ فعال و نوبت‌ها قفل‌اند.
+ * کار تکه‌تکه (هر بار ۲۰ مورد) انجام می‌شود تا هاستِ اشتراکی از زمان نیفتد.
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+class Golzari_Brand_Cleanup {
+
+	const QUEUE = 'golzari_cleanup_queue';
+	const LOG   = 'golzari_cleanup_log';
+	const BATCH = 20;
+
+	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
+		add_action( 'admin_post_golzari_cleanup', array( __CLASS__, 'start' ) );
+	}
+
+	public static function menu() {
+		add_management_page( 'پاک‌سازیِ قالب', 'پاک‌سازیِ قالب', 'manage_options', 'golzari-cleanup', array( __CLASS__, 'page' ) );
+	}
+
+	/* ---------- آنچه قفل است ---------- */
+
+	/** شناسه‌های برگه‌ها و پیوست‌هایی که هرگز پاک نمی‌شوند. */
+	public static function protected_ids() {
+		$ids = array(
+			(int) get_option( 'page_on_front' ),
+			(int) get_option( 'page_for_posts' ),
+			(int) get_option( 'site_icon' ),
+			(int) get_theme_mod( 'custom_logo' ),
+		);
+		$slug    = trim( (string) wp_parse_url( golzari_label( 'booking_path' ), PHP_URL_PATH ), '/' );
+		$booking = '' !== $slug ? get_page_by_path( $slug ) : null;
+		if ( $booking ) {
+			$ids[] = (int) $booking->ID;
+		}
+		return array_values( array_filter( array_unique( $ids ) ) );
+	}
+
+	/** گونه‌های محتوا که در فهرست نمی‌آیند. */
+	private static function skip_types() {
+		return array( 'attachment', 'revision', 'nav_menu_item', 'custom_css', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_global_styles', 'wp_font_family', 'wp_font_face', Golzari_Brand_Booking::CPT );
+	}
+
+	/* ---------- نامزدها ---------- */
+
+	private static function posts_of( $type ) {
+		return get_posts(
+			array(
+				'post_type'      => $type,
+				'post_status'    => array( 'publish', 'draft', 'pending', 'private', 'future' ),
+				'posts_per_page' => 500,
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+				'no_found_rows'  => true,
+				'post__not_in'   => self::protected_ids(),
+			)
+		);
+	}
+
+	private static function other_types() {
+		$out = array();
+		foreach ( get_post_types( array(), 'objects' ) as $name => $obj ) {
+			if ( in_array( $name, array_merge( self::skip_types(), array( 'page', 'post' ) ), true ) ) {
+				continue;
+			}
+			$n = (int) array_sum( (array) wp_count_posts( $name ) ) - (int) ( isset( wp_count_posts( $name )->trash ) ? wp_count_posts( $name )->trash : 0 );
+			if ( $n > 0 ) {
+				$out[ $name ] = array( $obj->labels->name, $n );
+			}
+		}
+		return $out;
+	}
+
+	private static function attachments() {
+		return get_posts(
+			array(
+				'post_type'      => 'attachment',
+				'post_status'    => 'inherit',
+				'posts_per_page' => 2000,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'post__not_in'   => self::protected_ids(),
+			)
+		);
+	}
+
+	private static function themes() {
+		$keep = array( get_stylesheet(), get_template() );
+		$out  = array();
+		foreach ( wp_get_themes() as $slug => $theme ) {
+			if ( ! in_array( $slug, $keep, true ) ) {
+				$out[ $slug ] = $theme->get( 'Name' );
+			}
+		}
+		return $out;
+	}
+
+	/* ---------- صفحه ---------- */
+
+	public static function page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$queue = get_option( self::QUEUE, array() );
+		echo '<div class="wrap" id="golzari-cleanup"><h1>پاک‌سازیِ قالب</h1>';
+
+		if ( $queue ) {
+			self::run_batch();
+			$left = count( (array) get_option( self::QUEUE, array() ) );
+			$log  = (array) get_option( self::LOG, array() );
+			echo '<div class="notice notice-info"><p>در حالِ پاک‌سازی… ' . esc_html( Golzari_Brand::fa_digits( $left ) ) . ' موردِ دیگر مانده. این صفحه را نبندید.</p></div>';
+			self::print_log( $log );
+			if ( $left ) {
+				echo '<script>setTimeout(function(){location.reload();},1200);</script>';
+			} else {
+				Golzari_Brand::purge();
+				echo '<div class="notice notice-success"><p>پاک‌سازی تمام شد.</p></div>';
+				delete_option( self::LOG );
+			}
+			echo '</div>';
+			return;
+		}
+
+		$pages  = self::posts_of( 'page' );
+		$posts  = self::posts_of( 'post' );
+		$others = self::other_types();
+		$atts   = self::attachments();
+		$themes = self::themes();
+		$locked = self::protected_ids();
+
+		echo '<p>چیزهایی را که لازم ندارید تیک بزنید. <b>برگه‌ها و نوشته‌ها به زباله‌دان می‌روند و تا ۳۰ روز از «برگه‌ها ← زباله‌دان» برمی‌گردند.</b> <b style="color:#b32d2e">عکس‌ها و قالب‌ها همیشگی پاک می‌شوند.</b></p>';
+		echo '<p>قفل و پاک‌نشدنی: ';
+		$names = array();
+		foreach ( $locked as $id ) {
+			$names[] = esc_html( get_the_title( $id ) ? get_the_title( $id ) : '#' . $id );
+		}
+		echo implode( '، ', $names ) . '، قالبِ فعال (' . esc_html( wp_get_theme()->get( 'Name' ) ) . ') و همه‌ی نوبت‌ها.</p>'; // phpcs:ignore WordPress.Security.EscapeOutput
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<input type="hidden" name="action" value="golzari_cleanup">';
+		wp_nonce_field( 'golzari_cleanup' );
+
+		self::section( 'برگه‌ها', 'page', $pages, true );
+		self::section( 'نوشته‌ها', 'post', $posts, true );
+
+		if ( $others ) {
+			echo '<h2>گونه‌های دیگرِ محتوای قالب و صفحه‌ساز</h2><p class="description">بعضی از این‌ها (مثلِ قالب‌های سربرگ و پانویس) برای صفحه‌های باقی‌مانده‌ی قالب، مثلِ جست‌وجو و ۴۰۴، به کار می‌روند؛ با پاک کردنشان آن صفحه‌ها ساده‌تر نمایش داده می‌شوند.</p><ul>';
+			foreach ( $others as $type => $info ) {
+				printf( '<li><label><input type="checkbox" name="types[]" value="%s"> %s (%s)</label></li>', esc_attr( $type ), esc_html( $info[0] ), esc_html( Golzari_Brand::fa_digits( $info[1] ) ) );
+			}
+			echo '</ul>';
+		}
+
+		echo '<h2>عکس‌ها و پرونده‌های کتابخانه‌ی رسانه (' . esc_html( Golzari_Brand::fa_digits( count( $atts ) ) ) . ')</h2>';
+		if ( $atts ) {
+			echo '<p class="description">صفحه‌ی اصلی و صفحه‌ی رزرو از هیچ‌کدام از این‌ها استفاده نمی‌کنند؛ عکس‌های مجموعه داخلِ افزونه‌ی خودمان است.</p>';
+			echo '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0">';
+			foreach ( array_slice( $atts, 0, 60 ) as $id ) {
+				$src = wp_get_attachment_image_url( $id, 'thumbnail' );
+				if ( $src ) {
+					printf( '<img src="%s" width="56" height="56" style="object-fit:cover;border-radius:6px" alt="" loading="lazy">', esc_url( $src ) );
+				}
+			}
+			echo count( $atts ) > 60 ? '<span style="align-self:center">…</span>' : '';
+			echo '</div>';
+			echo '<label><input type="checkbox" name="media" value="1"> همه‌ی این عکس‌ها و پرونده‌ها برای همیشه پاک شوند</label>';
+		}
+
+		if ( $themes ) {
+			echo '<h2>قالب‌های نصب‌شده‌ی دیگر</h2><ul>';
+			foreach ( $themes as $slug => $name ) {
+				printf( '<li><label><input type="checkbox" name="themes[]" value="%s" checked> %s</label></li>', esc_attr( $slug ), esc_html( $name ) );
+			}
+			echo '</ul>';
+		}
+
+		echo '<hr><p><label><input type="checkbox" name="confirm" value="1" required> فهرست را دیدم و می‌دانم عکس‌ها و قالب‌ها برنمی‌گردند.</label></p>';
+		submit_button( 'پاک کردنِ موارد انتخاب‌شده', 'delete' );
+		echo '</form></div>';
+	}
+
+	private static function section( $title, $type, $items, $checked ) {
+		echo '<h2>' . esc_html( $title ) . ' (' . esc_html( Golzari_Brand::fa_digits( count( $items ) ) ) . ')</h2>';
+		if ( ! $items ) {
+			echo '<p>چیزی نیست.</p>';
+			return;
+		}
+		echo '<ul style="columns:2;max-width:900px">';
+		foreach ( $items as $p ) {
+			printf(
+				'<li><label><input type="checkbox" name="ids[]" value="%d"%s> %s <code dir="ltr">/%s</code></label></li>',
+				(int) $p->ID,
+				$checked ? ' checked' : '',
+				esc_html( $p->post_title ? $p->post_title : '—' ),
+				esc_html( $p->post_name )
+			);
+		}
+		echo '</ul>';
+	}
+
+	private static function print_log( $log ) {
+		if ( ! $log ) {
+			return;
+		}
+		$labels = array(
+			'trash' => 'به زباله‌دان رفت',
+			'media' => 'عکس پاک شد',
+			'theme' => 'قالب پاک شد',
+			'fail'  => 'پاک نشد',
+		);
+		echo '<ul>';
+		foreach ( $labels as $k => $l ) {
+			if ( ! empty( $log[ $k ] ) ) {
+				echo '<li>' . esc_html( $l ) . ': ' . esc_html( Golzari_Brand::fa_digits( $log[ $k ] ) ) . '</li>';
+			}
+		}
+		echo '</ul>';
+	}
+
+	/* ---------- اجرا ---------- */
+
+	public static function start() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( 'دسترسی ندارید.' );
+		}
+		check_admin_referer( 'golzari_cleanup' );
+		if ( empty( $_POST['confirm'] ) ) {
+			wp_die( 'تأیید لازم است.' );
+		}
+		$locked = self::protected_ids();
+		$queue  = array();
+
+		foreach ( isset( $_POST['ids'] ) ? array_map( 'intval', (array) $_POST['ids'] ) : array() as $id ) {
+			if ( $id && ! in_array( $id, $locked, true ) && in_array( get_post_type( $id ), array( 'page', 'post' ), true ) ) {
+				$queue[] = array( 'trash', $id );
+			}
+		}
+		$allowed = array_keys( self::other_types() );
+		foreach ( isset( $_POST['types'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['types'] ) ) : array() as $type ) {
+			if ( in_array( $type, $allowed, true ) ) {
+				foreach ( self::posts_of( $type ) as $p ) {
+					$queue[] = array( 'trash', (int) $p->ID );
+				}
+			}
+		}
+		if ( ! empty( $_POST['media'] ) ) {
+			foreach ( self::attachments() as $id ) {
+				$queue[] = array( 'media', (int) $id );
+			}
+		}
+		$themes = self::themes();
+		foreach ( isset( $_POST['themes'] ) ? array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['themes'] ) ) : array() as $slug ) {
+			if ( isset( $themes[ $slug ] ) ) {
+				$queue[] = array( 'theme', $slug );
+			}
+		}
+		update_option( self::QUEUE, $queue, false );
+		update_option( self::LOG, array(), false );
+		wp_safe_redirect( admin_url( 'tools.php?page=golzari-cleanup' ) );
+		exit;
+	}
+
+	private static function run_batch() {
+		$queue  = (array) get_option( self::QUEUE, array() );
+		$log    = (array) get_option( self::LOG, array() );
+		$locked = self::protected_ids();
+		$batch  = array_splice( $queue, 0, self::BATCH );
+		foreach ( $batch as $job ) {
+			list( $kind, $target ) = $job;
+			$ok = false;
+			if ( 'trash' === $kind && ! in_array( (int) $target, $locked, true ) && Golzari_Brand_Booking::CPT !== get_post_type( $target ) ) {
+				$ok = (bool) wp_trash_post( (int) $target );
+			} elseif ( 'media' === $kind && ! in_array( (int) $target, $locked, true ) && 'attachment' === get_post_type( $target ) ) {
+				$ok = (bool) wp_delete_attachment( (int) $target, true );
+			} elseif ( 'theme' === $kind && ! in_array( $target, array( get_stylesheet(), get_template() ), true ) ) {
+				require_once ABSPATH . 'wp-admin/includes/file.php';
+				require_once ABSPATH . 'wp-admin/includes/theme.php';
+				$r  = delete_theme( $target );
+				$ok = true === $r;
+			}
+			$key         = $ok ? $kind : 'fail';
+			$log[ $key ] = ( isset( $log[ $key ] ) ? $log[ $key ] : 0 ) + 1;
+		}
+		update_option( self::QUEUE, $queue, false );
+		update_option( self::LOG, $log, false );
+	}
+}
