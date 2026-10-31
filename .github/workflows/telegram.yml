@@ -1,0 +1,43 @@
+name: ربات تلگرام — رساندنِ خبرها
+
+# اگر هاست به تلگرام نرسد، خبرِ نوبت‌ها در صفِ سایت می‌ماند و این کار هر ۵ دقیقه با «یک» درخواست
+# برش می‌دارد و به تلگرام می‌فرستد؛ نشانیِ قلابِ ربات را هم اگر لازم بود ثبت می‌کند.
+# بی رمزِ TELEGRAM_BOT_TOKEN در رمزهای مخزن، هیچ کاری نمی‌کند و به سایت هم درخواست نمی‌زند.
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: telegram
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: برداشتنِ صف و فرستادن
+        env:
+          TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then echo "رمزِ ربات ثبت نشده؛ کاری نیست."; exit 0; fi
+          key=$(printf '%s' outbox | openssl dgst -sha256 -hmac "$TOKEN" | awk '{print $NF}' | cut -c1-32)
+          code=$(curl -sS -o box.json -w '%{http_code}' --max-time 30 "https://golzaripmg.ir/wp-json/golzari/v1/telegram/outbox?key=$key" || echo 000)
+          echo "صف: $code"
+          if [ "$code" != "200" ]; then exit 0; fi
+          api="https://api.telegram.org/bot$TOKEN"
+          # قلابِ ربات: اگر ثبت نیست یا فرق دارد، ثبت شود.
+          want=$(jq -r '.webhook.url // empty' box.json)
+          secret=$(jq -r '.webhook.secret // empty' box.json)
+          have=$(curl -sS --max-time 20 "$api/getWebhookInfo" | jq -r '.result.url // empty')
+          if [ -n "$want" ] && [ "$want" != "$have" ]; then
+            curl -sS --max-time 20 -X POST "$api/setWebhook" -H 'Content-Type: application/json' \
+              -d "$(jq -n --arg u "$want" --arg s "$secret" '{url:$u, secret_token:$s, allowed_updates:["message","callback_query"]}')" | jq -c '{ok, description}'
+          fi
+          n=$(jq '.messages | length' box.json)
+          echo "پیام در صف: $n"
+          for i in $(seq 0 $((n - 1))); do
+            jq -c ".messages[$i]" box.json | curl -sS --max-time 20 -X POST "$api/sendMessage" -H 'Content-Type: application/json' -d @- | jq -c '{ok, description}'
+            sleep 1
+          done

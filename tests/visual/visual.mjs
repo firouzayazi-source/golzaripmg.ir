@@ -2,6 +2,7 @@
 // در عرضِ گوشی و رایانه: بی اسکرولِ افقی، بی خطای جاوااسکریپت یا پی‌اچ‌پی، بخش‌های اصلی حاضر.
 import { chromium } from 'playwright';
 import { mkdirSync } from 'node:fs';
+import { createHmac } from 'node:crypto';
 
 const BASE = (process.argv[2] || 'http://127.0.0.1:8080').replace(/\/$/, '');
 const SHOTS = process.env.SHOTS_DIR || 'shots';
@@ -202,6 +203,50 @@ for (const vp of VIEWPORTS) {
   if (rows < 1) fail('نوبتِ ثبت‌شده در فهرستِ پیشخوان نیست');
   else console.log(`✓ نوبت‌ها در پیشخوان: ${rows}`);
   await context.close();
+}
+// ۱۴۰۵/۰۸/۰۹: ربات تلگرام از راهِ قلاب: اتصال، فهرست، تنظیمات، و صفِ خبرها.
+{
+  const TOKEN = '123456789:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+  const hm = (w, n) => createHmac('sha256', TOKEN).update(w).digest('hex').slice(0, n);
+  const ctx = await browser.newContext();
+  const rq = ctx.request;
+  const hook = BASE + '/?rest_route=/golzari/v1/telegram/hook/' + hm('hook', 24);
+  const post = (body, secret = hm('secret', 32)) => rq.post(hook, { data: body, headers: { 'X-Telegram-Bot-Api-Secret-Token': secret } });
+  const chat = { id: 777, type: 'private' };
+  try {
+    let r = await post({ message: { chat, from: { first_name: 'آزمون' }, text: '/start 123456' } }, 'wrong');
+    if (r.status() !== 403) fail(`قلاب بی رمزِ درست باز است (${r.status()})`);
+    r = await post({ message: { chat, from: { first_name: 'آزمون' }, text: 'سلام' } });
+    let j = await r.json();
+    if (!/خصوصی/.test(j.text || '')) fail('ربات به گفت‌وگوی وصل‌نشده جوابِ خصوصی نداد');
+    r = await post({ message: { chat, from: { first_name: 'آزمون' }, text: '/start 123456' } });
+    j = await r.json();
+    if (j.method !== 'sendMessage' || !/وصل شد/.test(j.text || '')) fail('اتصالِ ربات با کد نشد: ' + JSON.stringify(j).slice(0, 200));
+    const cb = (data) => post({ callback_query: { id: 'q', data, message: { message_id: 5, chat } } }).then((x) => x.json());
+    j = await cb('l:7');
+    if (j.method !== 'editMessageText' || !/نوبت/.test(j.text)) fail('فهرستِ نوبت‌ها در ربات نیامد');
+    j = await cb('sd:5');
+    if (!(j.reply_markup?.inline_keyboard || []).flat().some((b) => b.callback_data === 'sd:5' && b.text.startsWith('✅'))) fail('روشن کردنِ جمعه از ربات نشد');
+    await cb('sd:5');
+    j = await cb('sl:30');
+    if (!/۳۰ دقیقه/.test(j.text || '')) fail('مدتِ نوبت از ربات عوض نشد');
+    await cb('sl:60');
+    // نوبتِ تازه پس از اتصال باید در صفِ خبرها بیاید.
+    const av = await (await rq.get(BASE + '/?rest_route=/golzari/v1/booking&staff=golzari')).json();
+    const day = av.days.find((d) => d.slots.some((s) => s.free));
+    const slot = day.slots.find((s) => s.free);
+    r = await rq.post(BASE + '/?rest_route=/golzari/v1/booking', { data: { service: 'general', staff: 'golzari', date: day.d, time: slot.t, name: 'خبرِ ربات', phone: '09121234567', elapsed: 9 } });
+    if (!(await r.json()).ok) fail('نوبتِ آزمونِ ربات ثبت نشد');
+    const bad = await rq.get(BASE + '/?rest_route=/golzari/v1/telegram/outbox&key=bad');
+    if (bad.status() !== 403) fail('صفِ خبرها بی کلید باز است');
+    await new Promise((res) => setTimeout(res, 1500));
+    const box = await (await rq.get(BASE + '/?rest_route=/golzari/v1/telegram/outbox&key=' + hm('outbox', 32))).json();
+    if (!box.webhook?.url || !(box.messages || []).some((m) => /خبرِ ربات/.test(m.text))) fail('خبرِ نوبتِ تازه در صفِ تلگرام نیست: ' + JSON.stringify(box).slice(0, 200));
+    else console.log('✓ ربات تلگرام');
+  } catch (e) {
+    fail('ربات تلگرام: ' + e.message);
+  }
+  await ctx.close();
 }
 await browser.close();
 

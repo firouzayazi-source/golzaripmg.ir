@@ -37,3 +37,7 @@ wp post create --post_type=page --post_status=publish --post_name=sample --post_
 # صفحه‌ی رزرو (نشانیِ /booking/ با پیوندِ یکتای ساده: ?pagename=booking).
 wp post create --post_type=page --post_status=publish --post_name=booking --post_title="دریافت نوبت" \
   --post_content="<p>فرمِ نوبتِ قالب</p>" --allow-root
+
+# ربات تلگرام با رمزِ ساختگی و کدِ اتصالِ ثابت؛ تلگرامِ واقعی در آزمون صدا زده نمی‌شود.
+wp option update golzari_tg_token "123456789:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" --allow-root
+wp option update golzari_tg_code '{"code":"123456","exp":4102444800}' --format=json --allow-root

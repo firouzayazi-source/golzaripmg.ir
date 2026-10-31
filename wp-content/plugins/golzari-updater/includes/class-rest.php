@@ -68,9 +68,13 @@ class Golzari_Rest {
 		$plugins['golzari-updater']['version'] = GOLZARI_UPD_VER;
 		$plugins['golzari-updater']['active']  = true;
 
+		// افزونه‌های دیگرِ ما می‌توانند وضعیتِ بی‌خطرِ خود را بیفزایند (بی رمز و بی دادهٔ شخصی).
+		$extra = apply_filters( 'golzari_health_extra', array() );
+
 		return self::nocache(
 			array(
 				'ok'              => true,
+				'extra'           => is_array( $extra ) ? $extra : array(),
 				'commit'          => $state['deployed_commit'],
 				'manifest_commit' => $state['manifest_commit'],
 				'last_check'      => $state['last_check'] ? gmdate( 'c', $state['last_check'] ) : null,

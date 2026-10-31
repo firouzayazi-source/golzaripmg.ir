@@ -135,8 +135,21 @@ class Golzari_Brand_Booking {
 				'staff'    => array(
 					'golzari' => 'سمیه گلزاری',
 				),
+				'closed'   => array(),
 			)
 		);
+	}
+
+	/** نوشتنِ یک تنظیم (از ربات)؛ بقیه دست نمی‌خورند. */
+	public static function set_opt( $key, $value ) {
+		$o         = self::opts();
+		$o[ $key ] = $value;
+		if ( 'closed' === $key ) {
+			// روزهای گذشته از فهرستِ بسته‌ها پاک می‌شوند.
+			$today     = ( new DateTimeImmutable( 'today', wp_timezone() ) )->format( 'Y-m-d' );
+			$o[ $key ] = array_values( array_filter( (array) $value, function ( $d ) use ( $today ) { return $d >= $today; } ) );
+		}
+		update_option( self::OPTS, $o, false );
 	}
 
 	/* ---------- تاریخ ---------- */
@@ -230,7 +243,7 @@ class Golzari_Brand_Booking {
 		for ( $i = 0; $i < (int) $o['ahead']; $i++ ) {
 			$day  = $today->modify( "+{$i} days" );
 			$ymd  = $day->format( 'Y-m-d' );
-			$open = in_array( (int) $day->format( 'w' ), array_map( 'intval', (array) $o['days'] ), true );
+			$open = in_array( (int) $day->format( 'w' ), array_map( 'intval', (array) $o['days'] ), true ) && ! in_array( $ymd, (array) $o['closed'], true );
 			$slots = array();
 			if ( $open ) {
 				$t   = $day->setTime( $sh, $sm );
@@ -398,6 +411,7 @@ class Golzari_Brand_Booking {
 
 		set_transient( $key, $n + 1, HOUR_IN_SECONDS );
 		self::notify( $id );
+		do_action( 'golzari_booking_created', $id );
 
 		return self::fresh(
 			array(
@@ -678,6 +692,7 @@ class Golzari_Brand_Booking {
 				'notify'   => isset( $in['notify'] ) && '1' === $in['notify'] ? '1' : '0',
 				'services' => self::list_save( $in, 'services', self::opts()['services'] ),
 				'staff'    => self::list_save( $in, 'staff', self::opts()['staff'] ),
+				'closed'   => self::opts()['closed'],
 			),
 			false
 		);
