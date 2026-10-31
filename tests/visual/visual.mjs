@@ -64,7 +64,7 @@ const REGRESSIONS = [
       const html = await page.content();
       if (/zibanoo|زیبانو|elementor|nour-/i.test(html)) return 'ردِ قالب یا صفحه‌سازِ قالب در صفحه‌ی اصلی';
       const text = await page.locator('body').innerText();
-      if (!text.includes('اطلاعات مجموعه گلزاری')) return 'بخشِ درباره نیامد';
+      if (!text.includes('درباره سمیه گلزاری') || !text.includes('مزایای ویژه هنرجویان') || !text.includes('ورکشاپ‌ها و دوره‌های تخصصی')) return 'بخش‌های محتوای تازه نیامد';
       const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
       if (!hrefs.some((h) => /\/booking\/$/.test(h))) return 'پیوندِ رزرو نیست';
       if (!hrefs.includes('tel:09129178237')) return 'پیوندِ تماس نیست';

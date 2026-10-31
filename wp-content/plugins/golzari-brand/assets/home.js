@@ -54,7 +54,7 @@
 	}
 
 	// نمایانی هنگامِ اسکرول
-	var els = document.querySelectorAll('.gz-section .gz-head, .gz-card, .gz-about__text, .gz-about__media, .gz-academy__text, .gz-collage, .gz-cta__in');
+	var els = document.querySelectorAll('.gz-section .gz-head, .gz-card, .gz-about__text, .gz-about__media, .gz-academy__text, .gz-collage, .gz-cta__in, .gz-team__in, .gz-feature, .gz-numbered li, .gz-ws__item, .gz-tagline');
 	if ('IntersectionObserver' in window) {
 		var io = new IntersectionObserver(function (entries) {
 			entries.forEach(function (en) {

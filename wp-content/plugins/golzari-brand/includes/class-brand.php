@@ -78,7 +78,8 @@ class Golzari_Brand {
 				continue;
 			}
 			if ( '<' !== $part[0] ) {
-				$parts[ $i ] = self::text( Golzari_Brand_Content::text( $part ) );
+				// جایگزینیِ متن‌های نمونه‌ی قالبِ قبلی فقط تا وقتی که آن قالب هست.
+				$parts[ $i ] = self::text( 'golzari-site' === get_stylesheet() ? $part : Golzari_Brand_Content::text( $part ) );
 			} elseif ( preg_match( '#^<(script|style|textarea|!--)#i', $part ) ) {
 				continue;
 			} else {

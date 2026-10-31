@@ -17,7 +17,7 @@ class Golzari_Brand_Settings {
 	}
 
 	public static function fields() {
-		return array_merge( self::base_fields(), Golzari_Brand_Home::titles(), Golzari_Brand_Booking::titles(), Golzari_Brand_Content::titles() );
+		return array_merge( self::base_fields(), Golzari_Brand_Home::titles(), Golzari_Brand_Booking::titles() );
 	}
 
 	private static function base_fields() {
@@ -51,7 +51,8 @@ class Golzari_Brand_Settings {
 	public static function sanitize( $in ) {
 		$out = array();
 		foreach ( array_keys( self::fields() ) as $key ) {
-			$v = isset( $in[ $key ] ) ? sanitize_text_field( wp_unslash( $in[ $key ] ) ) : '';
+			$long = in_array( $key, Golzari_Brand_Home::long_keys(), true );
+			$v    = isset( $in[ $key ] ) ? ( $long ? sanitize_textarea_field( wp_unslash( $in[ $key ] ) ) : sanitize_text_field( wp_unslash( $in[ $key ] ) ) ) : '';
 			if ( in_array( $key, array( 'hero', 'home' ), true ) ) {
 				$v = '1' === $v ? '1' : '0';
 			} elseif ( 'instagram' === $key ) {
@@ -87,6 +88,16 @@ class Golzari_Brand_Settings {
 					checked( Golzari_Brand::label( $key ), '1', false ),
 					esc_html( $checks[ $key ] ),
 					esc_attr( $key )
+				);
+				continue;
+			}
+			if ( in_array( $key, Golzari_Brand_Home::long_keys(), true ) ) {
+				printf(
+					'<tr><th scope="row"><label for="golzari-%1$s">%2$s</label></th><td><textarea class="large-text" rows="8" id="golzari-%1$s" name="%3$s[%1$s]" dir="auto">%4$s</textarea><p class="description">بندها را با یک سطرِ خالی و موردهای فهرست را هر کدام در یک سطر بنویسید.</p></td></tr>',
+					esc_attr( $key ),
+					esc_html( $title ),
+					esc_attr( Golzari_Brand::OPTION ),
+					esc_textarea( Golzari_Brand::label( $key ) )
 				);
 				continue;
 			}
