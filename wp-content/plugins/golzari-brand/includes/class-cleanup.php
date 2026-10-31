@@ -19,9 +19,219 @@ class Golzari_Brand_Cleanup {
 	const LOG   = 'golzari_cleanup_log';
 	const BATCH = 20;
 
+	const THEME = 'golzari-site';
+	const AUTO  = 'golzari_cleanup_auto';
+	const HOOK  = 'golzari_cleanup_step';
+
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_golzari_cleanup', array( __CLASS__, 'start' ) );
+		add_action( 'init', array( __CLASS__, 'install_theme' ), 1 );
+		add_action( 'init', array( __CLASS__, 'auto_schedule' ), 20 );
+		add_action( self::HOOK, array( __CLASS__, 'auto_step' ) );
+		add_filter( 'golzari_health_extra', array( __CLASS__, 'health' ) );
+	}
+
+	/* ---------- قالبِ «گلزاری» ---------- */
+
+	/** پرونده‌های قالب از افزونه به پوشه‌ی قالب‌ها رونوشت می‌شوند (هر بار که نسخه عوض شود). */
+	public static function install_theme() {
+		$src = GOLZARI_BRAND_DIR . 'theme/' . self::THEME;
+		$dst = trailingslashit( get_theme_root() ) . self::THEME;
+		if ( get_option( 'golzari_theme_ver' ) === GOLZARI_BRAND_VER && file_exists( $dst . '/style.css' ) ) {
+			return;
+		}
+		if ( ! is_dir( $src ) || ( ! is_dir( $dst ) && ! wp_mkdir_p( $dst ) ) ) {
+			return;
+		}
+		$ok = true;
+		foreach ( (array) glob( $src . '/*' ) as $file ) {
+			if ( is_file( $file ) ) {
+				$ok = copy( $file, $dst . '/' . basename( $file ) ) && $ok;
+			}
+		}
+		if ( $ok ) {
+			update_option( 'golzari_theme_ver', GOLZARI_BRAND_VER, false );
+			delete_site_transient( 'theme_roots' );
+			wp_clean_themes_cache();
+		}
+	}
+
+	/* ---------- پاک‌سازیِ خودکارِ یک‌باره ---------- */
+
+	/** گونه‌های محتوای قالب و صفحه‌ساز که به زباله‌دان می‌روند. */
+	private static function theme_type( $type ) {
+		return in_array( $type, array( 'page', 'post' ), true ) || (bool) preg_match( '#elementor|^e-|^ct_|zib|nour|noor|^wp_template|^wp_block$|^wp_navigation$#i', $type );
+	}
+
+	/** افزونه‌های قالب و صفحه‌ساز (پرونده‌ی اصلی). */
+	public static function theme_plugins() {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$out = array();
+		foreach ( array_keys( get_plugins() ) as $file ) {
+			$dir = strtok( $file, '/' );
+			if ( in_array( $dir, array( 'elementor', 'elementor-pro' ), true ) || 0 === strpos( $dir, 'zibanoo' ) ) {
+				$out[] = $file;
+			}
+		}
+		return $out;
+	}
+
+	public static function auto_schedule() {
+		$st = get_option( self::AUTO, array() );
+		if ( ! empty( $st['stage'] ) && 'done' === $st['stage'] ) {
+			return;
+		}
+		if ( ! wp_next_scheduled( self::HOOK ) ) {
+			wp_schedule_single_event( time() + 5, self::HOOK );
+		}
+	}
+
+	/** همه‌ی مرحله‌ها پشتِ سرِ هم (برای آزمون و خطِ فرمان). */
+	public static function auto_all() {
+		for ( $i = 0; $i < 500; $i++ ) {
+			$st = get_option( self::AUTO, array() );
+			if ( ! empty( $st['stage'] ) && 'done' === $st['stage'] ) {
+				return $st;
+			}
+			self::auto_step( true );
+		}
+		return get_option( self::AUTO, array() );
+	}
+
+	/** یک گام: قالب ← محتوا ← عکس‌ها ← افزونه‌های قالب ← قالب‌های دیگر ← پایان. */
+	public static function auto_step( $sync = false ) {
+		if ( ! $sync && get_transient( 'golzari_cleanup_lock' ) ) {
+			return;
+		}
+		set_transient( 'golzari_cleanup_lock', 1, 5 * MINUTE_IN_SECONDS );
+		$st = wp_parse_args(
+			get_option( self::AUTO, array() ),
+			array( 'stage' => 'theme', 'trash' => 0, 'media' => 0, 'plugins' => 0, 'themes' => 0, 'fail' => 0, 'switched' => false, 'skip' => array() )
+		);
+		// موردهایی که پاک نشدند دوباره امتحان نمی‌شوند تا کار در یک جا گیر نکند.
+		$locked = array_merge( self::protected_ids(), array_map( 'intval', (array) $st['skip'] ) );
+
+		switch ( $st['stage'] ) {
+			case 'theme':
+				self::install_theme();
+				$theme = wp_get_theme( self::THEME );
+				if ( $theme->exists() && ! $theme->errors() ) {
+					if ( get_stylesheet() !== self::THEME ) {
+						switch_theme( self::THEME );
+					}
+					$st['switched'] = get_stylesheet() === self::THEME;
+				}
+				$st['stage'] = 'content';
+				break;
+
+			case 'content':
+				$types = array_filter( get_post_types(), array( __CLASS__, 'theme_type' ) );
+				$ids   = get_posts(
+					array(
+						'post_type'      => array_values( $types ),
+						'post_status'    => array( 'publish', 'draft', 'pending', 'private', 'future' ),
+						'posts_per_page' => 25,
+						'fields'         => 'ids',
+						'no_found_rows'  => true,
+						'post__not_in'   => $locked,
+					)
+				);
+				foreach ( $ids as $id ) {
+					if ( wp_trash_post( $id ) ) {
+						$st['trash']++;
+					} else {
+						$st['fail']++;
+						$st['skip'][] = $id;
+					}
+				}
+				if ( ! $ids ) {
+					$st['stage'] = 'media';
+				}
+				break;
+
+			case 'media':
+				$ids = get_posts(
+					array(
+						'post_type'      => 'attachment',
+						'post_status'    => 'inherit',
+						'posts_per_page' => 25,
+						'fields'         => 'ids',
+						'no_found_rows'  => true,
+						'post__not_in'   => $locked,
+					)
+				);
+				foreach ( $ids as $id ) {
+					if ( wp_delete_attachment( $id, true ) ) {
+						$st['media']++;
+					} else {
+						$st['fail']++;
+						$st['skip'][] = $id;
+					}
+				}
+				if ( ! $ids ) {
+					$st['stage'] = 'plugins';
+				}
+				break;
+
+			case 'plugins':
+				// فقط وقتی قالبِ خودمان فعال است؛ وگرنه زیبانو بی افزونه‌اش می‌شکند.
+				if ( $st['switched'] ) {
+					require_once ABSPATH . 'wp-admin/includes/plugin.php';
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+					$files = self::theme_plugins();
+					if ( $files ) {
+						deactivate_plugins( $files, true );
+						$r = delete_plugins( $files );
+						true === $r ? $st['plugins'] += count( $files ) : $st['fail']++;
+					}
+				}
+				$st['stage'] = 'themes';
+				break;
+
+			case 'themes':
+				if ( $st['switched'] ) {
+					require_once ABSPATH . 'wp-admin/includes/file.php';
+					require_once ABSPATH . 'wp-admin/includes/theme.php';
+					foreach ( array_keys( wp_get_themes() ) as $slug ) {
+						if ( self::THEME !== $slug && get_stylesheet() !== $slug && get_template() !== $slug ) {
+							true === delete_theme( $slug ) ? $st['themes']++ : $st['fail']++;
+						}
+					}
+				}
+				$st['stage'] = 'done';
+				$st['at']    = time();
+				$st['skip']  = array();
+				Golzari_Brand::purge();
+				break;
+		}
+
+		update_option( self::AUTO, $st, false );
+		delete_transient( 'golzari_cleanup_lock' );
+		if ( ! $sync && 'done' !== $st['stage'] ) {
+			wp_schedule_single_event( time() + 20, self::HOOK );
+		}
+	}
+
+	/** وضعیتِ بی‌خطر برای نشانیِ سلامت. */
+	public static function health( $extra ) {
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$st               = get_option( self::AUTO, array() );
+		$extra['cleanup'] = array(
+			'stage'   => isset( $st['stage'] ) ? $st['stage'] : 'waiting',
+			'trash'   => isset( $st['trash'] ) ? (int) $st['trash'] : 0,
+			'media'   => isset( $st['media'] ) ? (int) $st['media'] : 0,
+			'plugins' => isset( $st['plugins'] ) ? (int) $st['plugins'] : 0,
+			'themes'  => isset( $st['themes'] ) ? (int) $st['themes'] : 0,
+			'fail'    => isset( $st['fail'] ) ? (int) $st['fail'] : 0,
+			'theme'   => get_stylesheet(),
+			'active'  => array_values( array_map( function ( $f ) { return strtok( $f, '/' ); }, (array) get_option( 'active_plugins', array() ) ) ),
+		);
+		return $extra;
 	}
 
 	public static function menu() {

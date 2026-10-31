@@ -271,3 +271,24 @@ body.gz{margin:0;font-family:"GZ",Tahoma,sans-serif;color:var(--ink);background:
 	.gz-choices,.gz-inputs{grid-template-columns:1fr}
 	.gz-times{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
+
+/* بقیه‌ی صفحه‌ها (قالبِ «گلزاری») */
+.gz-page .gz-float{display:none}
+.gz-content{padding-top:0}
+.gz-content__in{max-width:860px}
+.gz-article,.gz-empty,.gz-list__item{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 24px 60px -40px rgba(28,53,48,.55)}
+.gz-article{padding:clamp(18px,4vw,40px);margin-top:-40px;position:relative;z-index:1;overflow-wrap:anywhere}
+.gz-article img{border-radius:var(--r-s)}
+.gz-article h2,.gz-article h3{margin-block:1.2em .5em}
+.gz-article p{margin-block:0 1em}
+.gz-article a{color:var(--g);text-decoration:underline}
+.gz-empty{padding:40px 24px;text-align:center;margin-top:-40px;position:relative;z-index:1}
+.gz-empty .gz-actions{justify-content:center}
+.gz-list{display:grid;gap:14px;margin-top:-40px;position:relative;z-index:1}
+.gz-list__item{display:block;padding:20px 22px;transition:transform .2s}
+.gz-list__item:hover{transform:translateY(-3px)}
+.gz-list__item h2{font-size:1.2rem;margin:0}
+.gz-list__item p{color:var(--muted);margin-top:6px}
+.gz-pager{margin-top:20px;text-align:center}
+.gz-pager .page-numbers{display:inline-block;padding:6px 12px;margin:2px;border-radius:10px;border:1px solid var(--line)}
+.gz-pager .page-numbers.current{background:var(--g);color:#fff;border-color:var(--g)}

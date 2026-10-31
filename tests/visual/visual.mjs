@@ -18,8 +18,9 @@ const PHP_ERR = /(Fatal error|Parse error|Warning:|Notice:|Deprecated:)/;
 // صفحه‌ها و بخش‌هایی که باید حاضر باشند.
 const PAGES = [
   { name: 'home', path: '/', must: ['.gz-header', '.gz-hero h1', '#services .gz-card', '#works .gz-grid__item', '.gz-footer'] },
-  { name: 'sample', path: '/?pagename=sample', must: ['body'] },
+  { name: 'sample', path: '/?pagename=sample', must: ['.gz-header', '.gz-article', '.gz-footer'] },
   { name: 'booking', path: '/?pagename=booking', must: ['.gz-header', '.gz-bookform', '.gz-footer'] },
+  { name: 'p404', path: '/?p=999999', must: ['.gz-header', '.gz-empty', '.gz-footer'] },
   { name: 'bookings-admin', path: '/wp-admin/admin.php?page=golzari-bookings', admin: true, must: ['.wrap h1'] },
   { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]', 'input[name="staff[golzari]"]', 'input[name="services[fibrosis]"]'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
@@ -167,6 +168,7 @@ async function checkHealth(request) {
   const j = r.ok() ? await r.json() : null;
   if (!j || j.ok !== true || !j.plugins || !j.plugins['golzari-updater']) fail('نشانیِ سلامت درست جواب نداد');
   else console.log('✓ health ' + j.plugins['golzari-updater'].version);
+  if (!j || !j.extra || !j.extra.cleanup || j.extra.cleanup.stage !== 'done' || j.extra.cleanup.theme !== 'golzari-site') fail('پاک‌سازیِ یک‌باره تمام نشده یا قالبِ گلزاری فعال نیست: ' + JSON.stringify(j && j.extra && j.extra.cleanup));
 
   const priv = await request.get(BASE + '/?rest_route=/golzari/v1/status');
   if (priv.status() !== 401 && priv.status() !== 403) fail(`نشانیِ وضعیت بی ورود باز است (${priv.status()})`);

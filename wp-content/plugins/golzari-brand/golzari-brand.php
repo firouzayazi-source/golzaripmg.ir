@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: گلزاری — شخصی‌سازی
- * Description: صفحه‌ی اصلی و صفحه‌ی رزروِ اختصاصیِ مجموعه‌ی گلزاری با سربرگ و پانویسِ خودمان، سیستمِ نوبت‌دهی و ربات تلگرامِ آن، و جایگزینیِ نام‌ها، متن‌ها، عکس‌ها، لوگو و رنگِ قالب در بقیه‌ی صفحه‌ها؛ فقط در نمایش، بی دست زدن به قالب یا پایگاهِ داده.
- * Version: 2.5.0
+ * Description: صفحه‌ی اصلی و صفحه‌ی رزروِ اختصاصیِ مجموعه‌ی گلزاری با سربرگ و پانویسِ خودمان، سیستمِ نوبت‌دهی و ربات تلگرامِ آن، قالبِ سبکِ «گلزاری» برای بقیه‌ی صفحه‌ها، و پاک‌سازیِ یک‌باره‌ی قالبِ قبلی و صفحه‌ساز و محتوای نمونه‌ی آن.
+ * Version: 3.0.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: گلزاری
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLZARI_BRAND_VER', '2.5.0' );
+define( 'GOLZARI_BRAND_VER', '3.0.0' );
 define( 'GOLZARI_BRAND_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once GOLZARI_BRAND_DIR . 'includes/class-content.php';

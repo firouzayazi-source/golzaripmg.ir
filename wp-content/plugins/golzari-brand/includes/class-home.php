@@ -109,6 +109,10 @@ class Golzari_Brand_Home {
 			'foot_links'     => 'دسترسی سریع',
 			'foot_contact'   => 'تماس با ما',
 			'booking_path'   => '/booking/',
+			'p404_title'     => 'صفحه پیدا نشد',
+			'p404_text'      => 'صفحه‌ای که دنبالش بودید این‌جا نیست. از صفحه‌ی اصلی دیدن کنید یا نوبت بگیرید.',
+			'search_title'   => 'جست‌وجو',
+			'search_none'    => 'چیزی پیدا نشد.',
 		);
 	}
 
@@ -148,6 +152,10 @@ class Golzari_Brand_Home {
 			'foot_links'   => 'پانویس: عنوانِ پیوندها',
 			'foot_contact' => 'پانویس: عنوانِ تماس',
 			'booking_path' => 'نشانیِ صفحه‌ی رزرو',
+			'p404_title'   => 'صفحه‌ی ۴۰۴: عنوان',
+			'p404_text'    => 'صفحه‌ی ۴۰۴: متن',
+			'search_title' => 'جست‌وجو: عنوان',
+			'search_none'  => 'جست‌وجو: چیزی پیدا نشد',
 		);
 	}
 
