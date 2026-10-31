@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Golzari_Brand_Admin {
 
 	public static function init() {
-		add_action( 'login_enqueue_scripts', array( __CLASS__, 'login_css' ) );
+		// پس از شیوه‌نامه‌ی خودِ وردپرس چاپ می‌شود تا بر آن بنشیند.
+		add_action( 'login_head', array( __CLASS__, 'login_css' ), 99 );
 		add_filter( 'login_headerurl', array( __CLASS__, 'login_url' ) );
 		add_filter( 'login_headertext', array( __CLASS__, 'login_text' ) );
 		add_action( 'admin_menu', array( __CLASS__, 'hide_nobat' ), 9999 );
@@ -34,7 +35,7 @@ class Golzari_Brand_Admin {
 body.login{font-family:"GZ",Tahoma,sans-serif;min-height:100dvh;background:radial-gradient(900px 500px at 85% -10%,rgba(201,162,74,.22),transparent 60%),linear-gradient(160deg,#2e5246,#1c3530);display:flex;flex-direction:column;justify-content:center}
 body.login *{font-family:inherit}
 #login{width:min(92vw,380px);padding:24px 0}
-.login h1 a{background-image:url(' . $logo . ');background-size:contain;background-position:center;width:96px;height:96px;margin-bottom:8px}
+.login h1 a{background-image:url(' . $logo . ')!important;background-size:contain!important;background-position:center!important;width:96px!important;height:96px!important;margin-bottom:8px}
 .login h1::after{content:"' . esc_attr( golzari_label( 'brand_name' ) ) . '";display:block;text-align:center;color:#fff;font-size:20px;font-weight:700;margin-top:4px}
 .login form{border:0;border-radius:22px;padding:28px 24px;box-shadow:0 30px 70px -30px rgba(0,0,0,.6);background:#fff}
 .login label{color:#1f2b28;font-size:14px}
