@@ -28,7 +28,7 @@ class Golzari_Brand_Cleanup {
 		add_action( 'admin_post_golzari_cleanup', array( __CLASS__, 'start' ) );
 		add_action( 'init', array( __CLASS__, 'install_theme' ), 1 );
 		add_action( 'init', array( __CLASS__, 'auto_schedule' ), 20 );
-		add_action( self::HOOK, array( __CLASS__, 'auto_step' ) );
+		add_action( self::HOOK, array( __CLASS__, 'auto_cron' ) );
 		add_filter( 'golzari_health_extra', array( __CLASS__, 'health' ) );
 	}
 
@@ -86,6 +86,21 @@ class Golzari_Brand_Cleanup {
 		}
 		if ( ! wp_next_scheduled( self::HOOK ) ) {
 			wp_schedule_single_event( time() + 5, self::HOOK );
+		}
+	}
+
+	/** اجرای زمان‌بندی‌شده: تا حدودِ ۲۰ ثانیه گام پشتِ گام، بعد ادامه در اجرای بعدی. */
+	public static function auto_cron() {
+		if ( get_transient( 'golzari_cleanup_lock' ) ) {
+			return;
+		}
+		$start = microtime( true );
+		do {
+			self::auto_step( true );
+			$st = get_option( self::AUTO, array() );
+		} while ( ( empty( $st['stage'] ) || 'done' !== $st['stage'] ) && microtime( true ) - $start < 20 );
+		if ( empty( $st['stage'] ) || 'done' !== $st['stage'] ) {
+			wp_schedule_single_event( time() + 10, self::HOOK );
 		}
 	}
 
