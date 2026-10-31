@@ -96,7 +96,16 @@ class Golzari_Brand_Cleanup {
 		}
 		$start = microtime( true );
 		do {
-			self::auto_step( true );
+			try {
+				self::auto_step( true );
+			} catch ( Throwable $e ) {
+				// خطا در نشانیِ سلامت دیده می‌شود؛ گامِ بعدی دوباره امتحان می‌کند.
+				$st          = (array) get_option( self::AUTO, array() );
+				$st['error'] = substr( $e->getMessage() . ' @ ' . basename( $e->getFile() ) . ':' . $e->getLine(), 0, 300 );
+				update_option( self::AUTO, $st, false );
+				delete_transient( 'golzari_cleanup_lock' );
+				break;
+			}
 			$st = get_option( self::AUTO, array() );
 		} while ( ( empty( $st['stage'] ) || 'done' !== $st['stage'] ) && microtime( true ) - $start < 20 );
 		if ( empty( $st['stage'] ) || 'done' !== $st['stage'] ) {
@@ -139,10 +148,15 @@ class Golzari_Brand_Cleanup {
 					}
 					$st['switched'] = get_stylesheet() === self::THEME;
 				}
-				$st['stage'] = 'content';
+				// اول افزونه‌های قالب برداشته می‌شوند: بی قالبشان، هنگامِ پاک کردنِ برگه‌ها خطا می‌دهند.
+				$st['stage'] = 'plugins';
 				break;
 
 			case 'content':
+				if ( $st['switched'] && self::theme_plugins() && empty( $st['plugins_done'] ) ) {
+					$st['stage'] = 'plugins';
+					break;
+				}
 				$types = array_filter( get_post_types(), array( __CLASS__, 'theme_type' ) );
 				$ids   = get_posts(
 					array(
@@ -187,7 +201,7 @@ class Golzari_Brand_Cleanup {
 					}
 				}
 				if ( ! $ids ) {
-					$st['stage'] = 'plugins';
+					$st['stage'] = 'themes';
 				}
 				break;
 
@@ -203,7 +217,8 @@ class Golzari_Brand_Cleanup {
 						true === $r ? $st['plugins'] += count( $files ) : $st['fail']++;
 					}
 				}
-				$st['stage'] = 'themes';
+				$st['plugins_done'] = true;
+				$st['stage']        = 'content';
 				break;
 
 			case 'themes':
@@ -243,6 +258,7 @@ class Golzari_Brand_Cleanup {
 			'plugins' => isset( $st['plugins'] ) ? (int) $st['plugins'] : 0,
 			'themes'  => isset( $st['themes'] ) ? (int) $st['themes'] : 0,
 			'fail'    => isset( $st['fail'] ) ? (int) $st['fail'] : 0,
+			'error'   => isset( $st['error'] ) ? (string) $st['error'] : '',
 			'theme'   => get_stylesheet(),
 			'active'  => array_values( array_map( function ( $f ) { return strtok( $f, '/' ); }, (array) get_option( 'active_plugins', array() ) ) ),
 		);
