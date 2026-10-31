@@ -20,6 +20,22 @@ $paras = function ( $key ) use ( $l ) {
 	return $out;
 };
 /** فهرست: هر سطر یک مورد. */
+/** بندِ اول پیدا، بقیه پشتِ «ادامه‌ی متن». */
+$teaser = function ( $key ) use ( $l ) {
+	$all = array_values( array_filter( array_map( 'trim', preg_split( '/\n\s*\n/u', trim( (string) $l( $key ) ) ) ), 'strlen' ) );
+	if ( ! $all ) {
+		return '';
+	}
+	$out = '<p>' . esc_html( array_shift( $all ) ) . '</p>';
+	if ( $all ) {
+		$out .= '<details class="gz-more"><summary>' . esc_html( $l( 'more_label' ) ) . '</summary>';
+		foreach ( $all as $p ) {
+			$out .= '<p>' . esc_html( $p ) . '</p>';
+		}
+		$out .= '</details>';
+	}
+	return $out;
+};
 $lines = function ( $key ) use ( $l ) {
 	return array_values( array_filter( array_map( 'trim', preg_split( '/\n/u', (string) $l( $key ) ) ), 'strlen' ) );
 };
@@ -89,7 +105,7 @@ require __DIR__ . '/parts/header.php';
 				<span class="gz-kicker"><?php echo esc_html( $l( 'about_kicker' ) ); ?></span>
 				<h2><?php echo esc_html( $l( 'about_title' ) ); ?></h2>
 				<p class="gz-role"><?php echo esc_html( $l( 'about_sub' ) ); ?></p>
-				<div class="gz-prose"><?php echo $paras( 'about_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
+				<div class="gz-prose"><?php echo $teaser( 'about_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
 				<blockquote class="gz-quote"><?php echo esc_html( $l( 'about_quote' ) ); ?><cite>— <?php echo esc_html( $l( 'h_title' ) ); ?></cite></blockquote>
 			</div>
 		</div>
@@ -180,7 +196,7 @@ require __DIR__ . '/parts/header.php';
 			<div class="gz-academy__text">
 				<span class="gz-kicker gz-kicker--light"><?php echo esc_html( $l( 'acad_kicker' ) ); ?></span>
 				<h2><?php echo esc_html( $l( 'acad_title' ) ); ?></h2>
-				<div class="gz-prose"><?php echo $paras( 'acad_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
+				<div class="gz-prose"><?php echo $teaser( 'acad_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
 				<p class="gz-tagline gz-tagline--light"><?php echo esc_html( $l( 'acad_tag' ) ); ?></p>
 				<a class="gz-btn gz-btn--gold" href="<?php echo esc_url( $h::tel( $phone ) ); ?>"><?php echo $icon['phone']; ?><?php echo esc_html( $l( 'acad_cta' ) ); ?></a>
 			</div>
@@ -199,17 +215,14 @@ require __DIR__ . '/parts/header.php';
 				<h2><?php echo esc_html( $l( 'perk_title' ) ); ?></h2>
 				<p><?php echo esc_html( $l( 'perk_text' ) ); ?></p>
 			</div>
-			<ol class="gz-numbered">
+			<div class="gz-acc">
 				<?php for ( $i = 1; $i <= 9; $i++ ) : ?>
-					<li>
-						<b><?php echo esc_html( call_user_func( $fa, $i ) ); ?></b>
-						<div>
-							<h3><?php echo esc_html( $l( "p{$i}_t" ) ); ?></h3>
-							<p><?php echo esc_html( $l( "p{$i}_d" ) ); ?></p>
-						</div>
-					</li>
+					<details>
+						<summary><b><?php echo esc_html( call_user_func( $fa, $i ) ); ?></b><span><?php echo esc_html( $l( "p{$i}_t" ) ); ?></span></summary>
+						<p><?php echo esc_html( $l( "p{$i}_d" ) ); ?></p>
+					</details>
 				<?php endfor; ?>
-			</ol>
+			</div>
 		</div>
 	</section>
 
@@ -218,15 +231,14 @@ require __DIR__ . '/parts/header.php';
 			<div class="gz-head">
 				<span class="gz-kicker"><?php echo esc_html( $l( 'ws_kicker' ) ); ?></span>
 				<h2><?php echo esc_html( $l( 'ws_title' ) ); ?></h2>
-				<div class="gz-prose"><?php echo $paras( 'ws_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
+				<div class="gz-prose"><?php echo $teaser( 'ws_text' ); // phpcs:ignore WordPress.Security.EscapeOutput ?></div>
 			</div>
-			<div class="gz-ws">
+			<div class="gz-acc gz-acc--ws">
 				<?php for ( $i = 1; $i <= 8; $i++ ) : ?>
-					<article class="gz-ws__item">
-						<span class="gz-ws__num"><?php echo esc_html( call_user_func( $fa, sprintf( '%02d', $i ) ) ); ?></span>
-						<h3><?php echo esc_html( $l( "ws{$i}_t" ) ); ?></h3>
+					<details>
+						<summary><b><?php echo esc_html( call_user_func( $fa, sprintf( '%02d', $i ) ) ); ?></b><span><?php echo esc_html( $l( "ws{$i}_t" ) ); ?></span></summary>
 						<p><?php echo esc_html( $l( "ws{$i}_d" ) ); ?></p>
-					</article>
+					</details>
 				<?php endfor; ?>
 			</div>
 			<p class="gz-tagline"><?php echo esc_html( $l( 'ws_tag' ) ); ?></p>

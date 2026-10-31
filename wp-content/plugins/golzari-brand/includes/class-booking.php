@@ -112,8 +112,49 @@ class Golzari_Brand_Booking {
 
 	/* ---------- تنظیمات ---------- */
 
+	/** خدمت‌های قابلِ رزرو؛ پیشوندِ کلید گروه را تعیین می‌کند. */
+	public static function default_services() {
+		return array(
+			'remo-eye'      => 'ریموو چشم',
+			'remo-lip'      => 'ریموو لب',
+			'remo-brow'     => 'ریموو ابرو',
+			'brow-micro'    => 'میکروبلیدینگ ابرو',
+			'brow-pigment'  => 'میکروپیگمنتیشن ابرو',
+			'lip-shading'   => 'شیدینگ لب',
+			'eye-lashline'  => 'بن‌مژه',
+			'eye-liner'     => 'خط چشم',
+			'eye-shading'   => 'شیدینگ چشم',
+		);
+	}
+
+	/** گروه‌های خدمت با پیشوندِ کلید؛ خدمت‌های تازه‌ی پیشخوان در «سایر خدمات». */
+	public static function service_groups() {
+		$titles = array(
+			'remo-' => 'ریموو تاتو',
+			'brow-' => 'خدمات تخصصی ابرو',
+			'lip-'  => 'خدمات تخصصی لب',
+			'eye-'  => 'خدمات تخصصی چشم',
+		);
+		$out = array();
+		foreach ( self::services() as $k => $name ) {
+			$g = 'سایر خدمات';
+			foreach ( $titles as $prefix => $title ) {
+				if ( 0 === strpos( $k, $prefix ) ) {
+					$g = $title;
+					break;
+				}
+			}
+			$out[ $g ][ $k ] = $name;
+		}
+		return $out;
+	}
+
 	public static function opts() {
 		$o = get_option( self::OPTS, array() );
+		// فهرستِ خدمت‌های نخستین (۱۴۰۵/۰۸/۰۹) جای خود را به فهرستِ کاملِ کاربر می‌دهد.
+		if ( is_array( $o ) && isset( $o['services'] ) && array( 'remo-brow', 'remo-lip', 'remo-liner', 'fibrosis', 'general' ) === array_keys( (array) $o['services'] ) ) {
+			unset( $o['services'] );
+		}
 		return wp_parse_args(
 			is_array( $o ) ? $o : array(),
 			array(
@@ -125,13 +166,7 @@ class Golzari_Brand_Booking {
 				'lead'     => 2,
 				'capacity' => 1,
 				'notify'   => '1',
-				'services' => array(
-					'remo-brow'  => 'ریمو ابرو',
-					'remo-lip'   => 'ریمو لب',
-					'remo-liner' => 'ریمو خط چشم',
-					'fibrosis'   => 'فیبروز ابرو',
-					'general'    => 'خدمات عمومی',
-				),
+				'services' => self::default_services(),
 				'staff'    => array(
 					'golzari' => 'سمیه گلزاری',
 				),

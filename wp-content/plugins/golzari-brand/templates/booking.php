@@ -37,9 +37,14 @@ require __DIR__ . '/parts/header.php';
 
 				<fieldset class="gz-field">
 					<legend><?php echo esc_html( Golzari_Brand::fa_digits( 1 ) . '. ' . $l( 'b_step1' ) ); ?></legend>
-					<div class="gz-choices" id="gz-services">
-						<?php foreach ( Golzari_Brand_Booking::services() as $key => $name ) : ?>
-							<label class="gz-choice"><input type="radio" name="service" value="<?php echo esc_attr( $key ); ?>"><span><?php echo esc_html( $name ); ?></span></label>
+					<div id="gz-services">
+						<?php foreach ( Golzari_Brand_Booking::service_groups() as $group => $items ) : ?>
+							<p class="gz-group"><?php echo esc_html( $group ); ?></p>
+							<div class="gz-choices">
+								<?php foreach ( $items as $key => $name ) : ?>
+									<label class="gz-choice"><input type="radio" name="service" value="<?php echo esc_attr( $key ); ?>"><span><?php echo esc_html( $name ); ?></span></label>
+								<?php endforeach; ?>
+							</div>
 						<?php endforeach; ?>
 					</div>
 				</fieldset>

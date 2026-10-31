@@ -366,3 +366,52 @@ body.gz{margin:0;font-family:"GZ",Tahoma,sans-serif;color:var(--ink);background:
 	.gz-team img{width:140px;height:140px}
 	.gz-prose p{text-align:right}
 }
+
+/* فشرده: «ادامه‌ی متن»، فهرستِ بازشونده، کارت‌های کشیدنی در گوشی */
+.gz-more{margin-top:10px}
+.gz-more summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;color:var(--g);list-style:none}
+.gz-more summary::-webkit-details-marker{display:none}
+.gz-more summary::after{content:"";width:8px;height:8px;border:solid currentColor;border-width:0 2px 2px 0;transform:rotate(45deg);margin-top:-4px;transition:transform .2s}
+.gz-more[open] summary{margin-bottom:4px}
+.gz-more[open] summary::after{transform:rotate(-135deg);margin-top:4px}
+.gz-academy .gz-more summary{color:#e9cf8c}
+
+.gz-acc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;max-width:1000px;margin-inline:auto}
+.gz-acc details{background:#fff;border:1px solid var(--line);border-radius:var(--r-s);transition:box-shadow .2s,border-color .2s}
+.gz-acc details[open]{border-color:var(--g-s);box-shadow:0 16px 36px -28px rgba(28,53,48,.6)}
+.gz-acc summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;font-weight:700;color:var(--g-dd)}
+.gz-acc summary::-webkit-details-marker{display:none}
+.gz-acc summary b{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:900;color:#fff;background:linear-gradient(135deg,#d9b763,var(--gold) 55%,var(--gold-d))}
+.gz-acc summary span{flex:1}
+.gz-acc summary::after{content:"+";flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--g-s);color:var(--g);font-weight:900;transition:transform .2s}
+.gz-acc details[open] summary::after{content:"−"}
+.gz-acc details p{margin:0;padding:0 16px 16px 16px;padding-inline-start:62px;color:var(--muted);font-size:.95rem}
+.gz-acc--ws summary b{background:linear-gradient(135deg,var(--g),var(--g-d))}
+
+/* کارت‌های خدمات و ویژگی‌ها فشرده‌تر */
+.gz-card--serv{padding:22px 20px 18px}
+.gz-feature{padding:20px 14px}
+
+@media (max-width:640px){
+	.gz-section{padding-block:48px}
+	.gz-head{margin-bottom:24px}
+	.gz-head p{font-size:.95rem}
+	.gz-cards--serv,.gz-features{display:flex;overflow-x:auto;gap:12px;margin-inline:-16px;padding:4px 16px 14px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none}
+	.gz-cards--serv::-webkit-scrollbar,.gz-features::-webkit-scrollbar{display:none}
+	.gz-cards--serv .gz-card,.gz-features .gz-feature{flex:0 0 78%;scroll-snap-align:center}
+	.gz-cards--serv .gz-card:nth-child(4){grid-column:auto}
+	.gz-tagline{margin-top:20px;font-size:1rem}
+	.gz-acc{grid-template-columns:1fr;gap:8px}
+	.gz-acc summary{padding:12px 14px;font-size:.95rem}
+	.gz-acc details p{padding-inline-start:14px}
+	.gz-team{padding-block:36px}
+	.gz-team img{width:110px;height:110px}
+	.gz-quote{padding:16px;font-size:.95rem}
+}
+.gz-group{margin:14px 0 8px;font-weight:700;font-size:.9rem;color:var(--gold-d)}
+.gz-group:first-child{margin-top:0}
+@media (max-width:640px){
+	.gz-collage{gap:8px}
+	.gz-collage .gz-grid__item{aspect-ratio:1}
+	.gz-collage .gz-grid__item:nth-child(even){transform:none}
+}

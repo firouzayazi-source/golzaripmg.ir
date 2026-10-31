@@ -22,7 +22,7 @@ const PAGES = [
   { name: 'booking', path: '/?pagename=booking', must: ['.gz-header', '.gz-bookform', '.gz-footer'] },
   { name: 'p404', path: '/?p=999999', must: ['.gz-header', '.gz-empty', '.gz-footer'] },
   { name: 'bookings-admin', path: '/wp-admin/admin.php?page=golzari-bookings', admin: true, must: ['.wrap h1'] },
-  { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]', 'input[name="staff[golzari]"]', 'input[name="services[fibrosis]"]'] },
+  { name: 'booking-opts', path: '/wp-admin/admin.php?page=golzari-booking-opts', admin: true, must: ['select[name="start"]', 'input[name="staff[golzari]"]', 'input[name="services[brow-micro]"]'] },
   { name: 'search', path: '/?s=%D8%A2%D8%B1%D8%A7%DB%8C%D8%B4', must: ['body'] },
   { name: 'updater', path: '/wp-admin/tools.php?page=golzari-updater', admin: true, must: ['.wrap h1'] },
   { name: 'brand', path: '/wp-admin/options-general.php?page=golzari-brand', admin: true, must: ['.wrap h1', 'input[name="golzari_labels[instagram]"]'] },
@@ -266,7 +266,7 @@ for (const vp of VIEWPORTS) {
     const av = await (await rq.get(BASE + '/?rest_route=/golzari/v1/booking&staff=golzari')).json();
     const day = av.days.find((d) => d.slots.some((s) => s.free));
     const slot = day.slots.find((s) => s.free);
-    r = await rq.post(BASE + '/?rest_route=/golzari/v1/booking', { data: { service: 'general', staff: 'golzari', date: day.d, time: slot.t, name: 'خبرِ ربات', phone: '09121234567', elapsed: 9 } });
+    r = await rq.post(BASE + '/?rest_route=/golzari/v1/booking', { data: { service: 'remo-eye', staff: 'golzari', date: day.d, time: slot.t, name: 'خبرِ ربات', phone: '09121234567', elapsed: 9 } });
     if (!(await r.json()).ok) fail('نوبتِ آزمونِ ربات ثبت نشد');
     const bad = await rq.get(BASE + '/?rest_route=/golzari/v1/telegram/outbox&key=bad');
     if (bad.status() !== 403) fail('صفِ خبرها بی کلید باز است');
