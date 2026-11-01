@@ -28,7 +28,7 @@ class Golzari_Brand_Admin {
 
 	public static function login_css() {
 		$assets = plugins_url( 'assets/', GOLZARI_BRAND_DIR . 'golzari-brand.php' );
-		$logo   = esc_url( Golzari_Brand_Media::url( 'logo' ) );
+		$logo   = esc_url( Golzari_Brand_Media::url( 'logo-192' ) );
 		$css    = '
 @font-face{font-family:"GZ";src:url(' . esc_url( $assets . 'fonts/Vazirmatn-FD-Regular.woff2' ) . ') format("woff2");font-weight:400;font-display:swap}
 @font-face{font-family:"GZ";src:url(' . esc_url( $assets . 'fonts/Vazirmatn-FD-Bold.woff2' ) . ') format("woff2");font-weight:700;font-display:swap}

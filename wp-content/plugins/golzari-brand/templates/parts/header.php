@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <header class="gz-header" id="gz-header">
 	<div class="gz-wrap gz-header__in">
 		<a class="gz-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
-			<img src="<?php echo $h::img( 'logo' ); ?>" width="512" height="512" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>">
+			<img src="<?php echo $h::img( 'logo-160' ); ?>" width="160" height="160" decoding="async" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>">
 			<span><strong><?php echo esc_html( $l( 'brand_name' ) ); ?></strong><small><?php echo esc_html( $l( 'collection' ) ); ?></small></span>
 		</a>
 		<nav class="gz-nav" id="gz-nav" aria-label="<?php echo esc_attr( $l( 'nav_home' ) ); ?>">

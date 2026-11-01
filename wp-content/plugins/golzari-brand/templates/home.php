@@ -90,7 +90,7 @@ require __DIR__ . '/parts/header.php';
 			</div>
 			<div class="gz-hero__media">
 				<div class="gz-arch"></div>
-				<img src="<?php echo $h::img( 'hero-cut' ); ?>" width="647" height="900" alt="<?php echo esc_attr( $l( 'h_title' ) ); ?>" fetchpriority="high">
+				<img src="<?php echo $h::img( 'hero-cut-420' ); ?>" srcset="<?php echo $h::img( 'hero-cut-420' ); ?> 420w, <?php echo $h::img( 'hero-cut' ); ?> 647w" sizes="(max-width: 900px) 78vw, 480px" width="647" height="900" decoding="async" alt="<?php echo esc_attr( $l( 'h_title' ) ); ?>" fetchpriority="high">
 			</div>
 		</div>
 	</section>
@@ -99,7 +99,7 @@ require __DIR__ . '/parts/header.php';
 		<div class="gz-wrap gz-about__in">
 			<div class="gz-about__media">
 				<div class="gz-frame"></div>
-				<img src="<?php echo $h::img( 'about-cut' ); ?>" width="661" height="1000" alt="<?php echo esc_attr( $l( 'h_title' ) ); ?>" loading="lazy">
+				<img src="<?php echo $h::img( 'about-cut-440' ); ?>" srcset="<?php echo $h::img( 'about-cut-440' ); ?> 440w, <?php echo $h::img( 'about-cut' ); ?> 661w" sizes="(max-width: 900px) 80vw, 440px" width="661" height="1000" decoding="async" alt="<?php echo esc_attr( $l( 'h_title' ) ); ?>" loading="lazy">
 			</div>
 			<div class="gz-about__text">
 				<span class="gz-kicker"><?php echo esc_html( $l( 'about_kicker' ) ); ?></span>
@@ -113,7 +113,7 @@ require __DIR__ . '/parts/header.php';
 
 	<section class="gz-team">
 		<div class="gz-wrap gz-team__in">
-			<img src="<?php echo $h::img( 'work-1-sq' ); ?>" width="700" height="700" alt="<?php echo esc_attr( $l( 'team_title' ) ); ?>" loading="lazy">
+			<img src="<?php echo $h::img( 'work-1-sq-240' ); ?>" srcset="<?php echo $h::img( 'work-1-sq-240' ); ?> 240w, <?php echo $h::img( 'work-1-sq' ); ?> 700w" sizes="240px" width="700" height="700" decoding="async" alt="<?php echo esc_attr( $l( 'team_title' ) ); ?>" loading="lazy">
 			<div>
 				<h2><?php echo esc_html( $l( 'team_title' ) ); ?></h2>
 				<p><?php echo esc_html( $l( 'team_text' ) ); ?></p>
@@ -185,7 +185,7 @@ require __DIR__ . '/parts/header.php';
 			</div>
 			<div class="gz-grid">
 				<?php foreach ( $works as $w ) : ?>
-					<a class="gz-grid__item" data-cat="<?php echo (int) $w[1]; ?>" href="<?php echo $h::img( $w[0] ); ?>"><img src="<?php echo $h::img( $w[0] ); ?>" alt="<?php echo esc_attr( $l( $tabs[ $w[1] ] ) ); ?>" loading="lazy"></a>
+					<a class="gz-grid__item" data-cat="<?php echo (int) $w[1]; ?>" href="<?php echo $h::img( $w[0] ); ?>"><img src="<?php echo $h::img( $w[0] . '-thumb' ); ?>" decoding="async" alt="<?php echo esc_attr( $l( $tabs[ $w[1] ] ) ); ?>" loading="lazy"></a>
 				<?php endforeach; ?>
 			</div>
 		</div>
@@ -202,7 +202,7 @@ require __DIR__ . '/parts/header.php';
 			</div>
 			<div class="gz-collage">
 				<?php foreach ( array( 'cert-1', 'class-1', 'work-2', 'cert-2' ) as $p ) : ?>
-					<a class="gz-grid__item" data-cat="3" href="<?php echo $h::img( $p ); ?>"><img src="<?php echo $h::img( $p ); ?>" alt="<?php echo esc_attr( $l( 'g3' ) ); ?>" loading="lazy"></a>
+					<a class="gz-grid__item" data-cat="3" href="<?php echo $h::img( $p ); ?>"><img src="<?php echo $h::img( $p . '-thumb' ); ?>" decoding="async" alt="<?php echo esc_attr( $l( 'g3' ) ); ?>" loading="lazy"></a>
 				<?php endforeach; ?>
 			</div>
 		</div>

@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 <footer class="gz-footer" id="contact">
 	<div class="gz-wrap gz-footer__in">
 		<div class="gz-footer__brand">
-			<img src="<?php echo $h::img( 'logo' ); ?>" width="512" height="512" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>" loading="lazy">
+			<img src="<?php echo $h::img( 'logo-160' ); ?>" width="160" height="160" decoding="async" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>" loading="lazy">
 			<strong><?php echo esc_html( $l( 'brand_name' ) ); ?></strong>
 			<p><?php echo esc_html( $l( 'foot_about' ) ); ?></p>
 			<a class="gz-social" href="<?php echo $insta; ?>" target="_blank" rel="noopener"><?php echo $icon['insta']; ?><span dir="ltr">@<?php echo esc_html( $l( 'instagram' ) ); ?></span></a>

@@ -92,7 +92,7 @@ require __DIR__ . '/parts/header.php';
 			</div>
 
 			<aside class="gz-bookside">
-				<img src="<?php echo $h::img( 'logo' ); ?>" width="512" height="512" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>" loading="lazy">
+				<img src="<?php echo $h::img( 'logo-160' ); ?>" width="160" height="160" decoding="async" alt="<?php echo esc_attr( $l( 'name_fa' ) ); ?>" loading="lazy">
 				<h3><?php echo esc_html( $l( 'b_side_title' ) ); ?></h3>
 				<ul class="gz-checks">
 					<?php foreach ( array( 'b_side_1', 'b_side_2', 'b_side_3' ) as $k ) : ?>
