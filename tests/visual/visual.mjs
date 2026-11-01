@@ -123,7 +123,7 @@ async function login(context) {
   await page.goto(BASE + '/wp-login.php');
   // ۱۴۰۵/۰۸/۰۹: صفحه‌ی ورود با لوگوی مجموعه.
   const bg = await page.$eval('.login h1 a', (a) => getComputedStyle(a).backgroundImage).catch(() => '');
-  if (!bg.includes('golzari-brand/assets/logo.webp')) fail('صفحه‌ی ورود لوگوی مجموعه را ندارد');
+  if (!bg.includes('golzari-brand/assets/logo-192.webp')) fail('صفحه‌ی ورود لوگوی مجموعه را ندارد');
   await page.fill('#user_login', 'admin');
   await page.fill('#user_pass', 'admin');
   await Promise.all([page.waitForNavigation(), page.click('#wp-submit')]);
