@@ -15,3 +15,7 @@ jobs:
           head -c 600 body.txt 2>/dev/null || true
           echo
           if [ "$code" = "200" ]; then echo "✓ هاست از خارج جواب داد."; else echo "✗ هاست از خارج جواب نداد."; fi
+      - name: سرآیندهای حافظه‌ی موقتِ صفحه‌ی اصلی (یک درخواست، با فاصله)
+        run: |
+          sleep 10
+          curl -sS -o /dev/null -D - --max-time 20 https://golzaripmg.ir/ | grep -iE '^(HTTP|x-litespeed|cache-control|server|content-encoding)' || true
