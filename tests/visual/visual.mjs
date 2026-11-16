@@ -107,6 +107,8 @@ const REGRESSIONS = [
     path: '/',
     viewport: 'mobile',
     check: async (page) => {
+      // نوارِ مدیر فقط برای مدیرِ واردشده است؛ این وارسی منوی بازدیدکننده را می‌سنجد.
+      await page.addStyleTag({ content: '#wpadminbar{display:none!important}' });
       await page.click('#gz-burger');
       await page.waitForTimeout(400);
       const open = await page.$eval('#gz-nav', (n) => n.classList.contains('is-open') && getComputedStyle(n).visibility === 'visible');
