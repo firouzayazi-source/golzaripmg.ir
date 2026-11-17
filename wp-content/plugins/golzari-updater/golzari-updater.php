@@ -2,7 +2,7 @@
 /**
  * Plugin Name: گلزاری — به‌روزرسان
  * Description: افزونه‌های سفارشیِ سایت را از انتشارِ گیت‌هاب می‌خواند، در فهرستِ به‌روزرسانی نشان می‌دهد و هر ۱۵ دقیقه خودکار نصب می‌کند. نشانیِ سلامت و نشانی‌های فقط‌خواندنیِ مدیر را هم می‌سازد.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Requires at least: 5.6
  * Requires PHP: 7.4
  * Author: گلزاری
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GOLZARI_UPD_VER', '1.2.0' );
+define( 'GOLZARI_UPD_VER', '1.3.0' );
 define( 'GOLZARI_UPD_FILE', __FILE__ );
 define( 'GOLZARI_UPD_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -24,9 +24,11 @@ if ( ! defined( 'GOLZARI_MANIFEST_URL' ) ) {
 
 require_once GOLZARI_UPD_DIR . 'includes/class-updater.php';
 require_once GOLZARI_UPD_DIR . 'includes/class-rest.php';
+require_once GOLZARI_UPD_DIR . 'includes/class-site-updates.php';
 
 Golzari_Updater::init();
 Golzari_Rest::init();
+Golzari_Site_Updates::init();
 
 register_activation_hook( __FILE__, array( 'Golzari_Updater', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'Golzari_Updater', 'deactivate' ) );

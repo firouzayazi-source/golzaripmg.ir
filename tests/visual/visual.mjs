@@ -169,6 +169,8 @@ async function checkHealth(request) {
   if (!j || j.ok !== true || !j.plugins || !j.plugins['golzari-updater']) fail('نشانیِ سلامت درست جواب نداد');
   else console.log('✓ health ' + j.plugins['golzari-updater'].version);
   if (!j || !j.extra || !j.extra.cleanup || j.extra.cleanup.stage !== 'done' || j.extra.cleanup.theme !== 'golzari-site') fail('پاک‌سازیِ یک‌باره تمام نشده یا قالبِ گلزاری فعال نیست: ' + JSON.stringify(j && j.extra && j.extra.cleanup));
+  // ۱۴۰۵/۰۸/۲۶: گزارشِ به‌روزرسانیِ خودِ وردپرس در نشانیِ سلامت.
+  if (!j || !j.extra || !j.extra.updates || !j.extra.updates.wp) fail('گزارشِ به‌روزرسانیِ وردپرس در نشانیِ سلامت نیست');
 
   const priv = await request.get(BASE + '/?rest_route=/golzari/v1/status');
   if (priv.status() !== 401 && priv.status() !== 403) fail(`نشانیِ وضعیت بی ورود باز است (${priv.status()})`);

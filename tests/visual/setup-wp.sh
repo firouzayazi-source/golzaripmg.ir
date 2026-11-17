@@ -9,6 +9,7 @@ wp core download --quiet --allow-root
 wp config create --dbname=wp --dbuser=wp --dbpass=wp --skip-check --quiet --allow-root
 wp config set WP_DEBUG true --raw --allow-root
 wp config set WP_DEBUG_DISPLAY true --raw --allow-root
+wp config set WP_ENVIRONMENT_TYPE local --allow-root
 
 curl -sSL -o /tmp/sqlite.zip https://downloads.wordpress.org/plugin/sqlite-database-integration.zip
 unzip -q /tmp/sqlite.zip -d wp-content/plugins/
